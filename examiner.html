@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OSCE — Examiner Console (Part II)</title>
+<style>
+  :root{
+    --surface:#ffffff; --surface-2:#f5f6f8; --surface-3:#eceef2;
+    --ink:#1c2530; --ink-soft:#48505c; --ink-faint:#89909c;
+    --line:#e2e5ea; --line-strong:#d0d5dd;
+    --accent:#2a4a6b; --accent-bg:#eaeef3;
+    --ok:#2f6b4f; --ok-bg:#e9f1ec;
+    --warn:#8a6a2f; --warn-bg:#f3ecdf;
+    --danger:#9d3b33; --danger-bg:#f4e7e5;
+    --shadow:0 1px 1px rgba(28,37,48,.03); --shadow-lg:0 2px 10px rgba(28,37,48,.08);
+    --radius:10px; --radius-sm:7px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;padding:0}
+  body{
+    font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--ink); background:var(--surface-2); line-height:1.5; -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3,.serif,.presenting-title,.dx-title,.station-head .badge,.hero h2,.card>h3,.ovcard h3{
+    font-family:Georgia,"Iowan Old Style","Times New Roman",serif;font-weight:600;
+  }
+
+  /* ---------------- Header ---------------- */
+  header.topbar{position:sticky;top:0;z-index:50;background:var(--surface);border-bottom:1px solid var(--line)}
+  .topbar-inner{max-width:1120px;margin:0 auto;padding:12px 20px}
+  .brandrow{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .crest{width:42px;height:42px;border-radius:8px;flex:none;background:var(--accent-bg);border:1px solid var(--line);display:grid;place-items:center}
+  .crest svg{width:24px;height:24px;stroke:var(--accent)}
+  .titlewrap h1{margin:0;font-size:17px;letter-spacing:.2px;color:var(--ink)}
+  .titlewrap p{margin:2px 0 0;font-size:12px;color:var(--ink-faint);letter-spacing:.2px}
+  .spacer{flex:1}
+  .modewrap{display:flex;align-items:center;gap:9px}
+  .mode-label{font-size:11px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.8px}
+  .toggle{--w:210px;position:relative;width:var(--w);height:38px;border-radius:8px;background:var(--surface-3);border:1px solid var(--line-strong);cursor:pointer;padding:0;overflow:hidden;flex:none}
+  .toggle .knob{position:absolute;top:3px;left:3px;height:30px;width:calc(var(--w)/2 - 3px);background:var(--surface);border-radius:6px;transition:transform .22s cubic-bezier(.4,.1,.2,1);box-shadow:0 1px 2px rgba(0,0,0,.12)}
+  body.examiner-mode .toggle .knob{transform:translateX(calc(var(--w)/2))}
+  .toggle .opt{position:absolute;top:0;height:38px;width:calc(var(--w)/2);display:grid;place-items:center;font-size:12.5px;font-weight:700;letter-spacing:.2px;z-index:2}
+  .toggle .opt.cand{left:0;color:var(--ink)} .toggle .opt.exam{right:0;color:var(--ink-faint)}
+  body.examiner-mode .toggle .opt.cand{color:var(--ink-faint)} body.examiner-mode .toggle .opt.exam{color:var(--ink)}
+
+  .navrow{display:flex;gap:0;flex-wrap:wrap;margin-top:12px}
+  .pill{appearance:none;border:0;border-bottom:2px solid transparent;background:transparent;color:var(--ink-faint);padding:8px 2px;margin-right:22px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit}
+  .pill:hover{color:var(--ink)}
+  .pill.active{color:var(--ink);border-bottom-color:var(--accent)}
+  .pill .num{opacity:.5;margin-right:4px;font-weight:800}
+
+  .toolsrow{display:none;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+  body.examiner-mode .toolsrow{display:flex}
+  .tool-btn{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-soft);padding:7px 12px;border-radius:6px;font-size:12.5px;font-weight:600;cursor:pointer;font-family:inherit}
+  .tool-btn:hover{background:var(--surface-3)}
+  .toolsrow .hint{font-size:11.5px;color:var(--ink-faint)}
+  .timerbox{margin-left:auto;display:flex;align-items:center;gap:7px;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:4px 6px 4px 12px}
+  .timerbox .t{font-variant-numeric:tabular-nums;font-weight:800;font-size:20px;letter-spacing:1px;min-width:70px;text-align:center;color:var(--ink)}
+  .timerbox.warn{background:var(--danger-bg);border-color:#d8b0ab}
+  .timerbox.warn .t{color:var(--danger)}
+  .mini{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-soft);width:28px;height:28px;border-radius:6px;font-size:14px;cursor:pointer;font-weight:800}
+  .mini:hover{background:var(--surface-3)}
+
+  /* ---------------- Layout ---------------- */
+  main{max-width:1120px;margin:0 auto;padding:24px 20px 80px}
+  .view{display:none;animation:fade .2s ease}
+  .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px 22px;box-shadow:var(--shadow);margin-bottom:16px}
+  .card>h3{margin:0 0 10px;font-size:16px}
+  .kicker{font-size:11px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:9px}
+
+  /* Overview */
+  .hero{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:24px 26px;box-shadow:var(--shadow);margin-bottom:20px}
+  .hero h2{margin:0 0 6px;font-size:21px}
+  .hero p{margin:0;color:var(--ink-soft);font-size:14px;max-width:820px}
+  .factrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+  .fact{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 13px;font-size:12.5px;color:var(--ink-soft)}
+  .fact b{color:var(--ink)}
+  .callout{margin-top:16px;display:flex;gap:11px;align-items:flex-start;background:var(--warn-bg);border:1px solid #e6d5b0;border-radius:var(--radius-sm);padding:12px 15px;color:#6b4e18;font-size:13px}
+  .callout svg{flex:none;margin-top:1px;stroke:var(--warn)}
+
+  .ovgrid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px}
+  .ovcard{background:var(--surface);border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow);cursor:pointer;transition:box-shadow .15s}
+  .ovcard:hover{box-shadow:var(--shadow-lg)}
+  .ovcard .st-tag{font-size:11px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:var(--ink-faint)}
+  .ovcard h3{margin:5px 0 5px;font-size:17px}
+  .ovcard-dx{margin:0 0 6px;font-weight:700;color:var(--accent);font-size:13.5px}
+  .ovcard p{margin:0;color:var(--ink-soft);font-size:13px}
+  .ovcard .meta{margin-top:11px;display:flex;gap:14px;font-size:11.5px;color:var(--ink-faint);flex-wrap:wrap}
+  .ovcard .meta b{color:var(--ink-soft)}
+
+  /* Station head */
+  .station-head{display:flex;align-items:center;gap:15px;flex-wrap:wrap;background:var(--surface);border:1px solid var(--line);border-top:2px solid var(--accent);border-radius:var(--radius);padding:15px 20px;box-shadow:var(--shadow);margin-bottom:16px}
+  .station-head .badge{width:48px;height:48px;border-radius:9px;flex:none;background:var(--accent-bg);color:var(--accent);display:grid;place-items:center;font-size:22px}
+  .presenting-title{font-size:20px;font-weight:600;line-height:1.2}
+  body.examiner-mode .presenting-title{font-size:12px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:2px;font-family:ui-sans-serif,system-ui,sans-serif}
+  .dx-title{display:none;margin:0;font-size:20px}
+  body.examiner-mode .dx-title{display:block}
+  .station-head .sub{margin:3px 0 0;font-size:12px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+  .scorechip{margin-left:auto;display:none;align-items:center;gap:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:8px 14px}
+  body.examiner-mode .scorechip{display:flex}
+  .scorechip .val{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+  .scorechip .lab{font-size:10px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.6px}
+  .scorechip .band{font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .b-cf{background:var(--danger-bg);color:var(--danger)} .b-bf{background:#f6ede0;color:var(--warn)}
+  .b-bp{background:#eef4ee;color:var(--ok)} .b-cp{background:var(--ok-bg);color:var(--ok)} .b-ex{background:var(--accent-bg);color:var(--accent)}
+
+  /* Candidate door card */
+  .doorcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:16px;overflow:hidden}
+  .doorcard .dc-head{background:var(--accent);color:#fff;padding:12px 20px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px}
+  .doorcard .dc-head .l{font-size:12px;letter-spacing:.6px;text-transform:uppercase;opacity:.9}
+  .doorcard .dc-head .r{font-size:12.5px;font-weight:700}
+  .doorcard .dc-body{padding:18px 22px}
+  .dc-row{display:flex;gap:14px;margin:11px 0;font-size:14px}
+  .dc-row:first-child{margin-top:0}
+  .dc-row b{min-width:150px;flex:none;color:var(--ink-soft);font-weight:700}
+  .dc-row ol,.dc-row ul{margin:0;padding-left:20px} .dc-row li{margin:3px 0}
+  .dc-vignette{font-size:15.5px;line-height:1.7;margin:0;color:var(--ink)}
+  .dc-instr{margin-top:14px;padding:12px 15px;background:var(--surface-2);border:1px dashed var(--line-strong);border-radius:var(--radius-sm);font-size:13px;color:var(--ink-soft)}
+
+  /* stimulus reveals (candidate) */
+  .reveals{display:flex;gap:9px;flex-wrap:wrap}
+  .reveal-btn{appearance:none;border:1px solid var(--line-strong);color:var(--ink-soft);background:var(--surface);padding:9px 15px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;font-family:inherit}
+  .reveal-btn:hover{background:var(--surface-3)}
+  .reveal-btn.opened{background:var(--accent);border-color:var(--accent);color:#fff}
+  .reveal-btn .chev{transition:transform .2s} .reveal-btn.opened .chev{transform:rotate(90deg)}
+  .reveal-panel{display:none;margin-top:14px;animation:fade .18s ease} .reveal-panel.show{display:block}
+
+  .vitals{display:grid;grid-template-columns:repeat(auto-fit,minmax(115px,1fr));gap:9px}
+  .vital{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:9px 11px;text-align:center}
+  .vital .lab{font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.5px}
+  .vital .num{font-size:19px;font-weight:800;margin-top:2px;font-variant-numeric:tabular-nums}
+  .vital.flag .num{color:var(--danger)} .vital.warn2 .num{color:var(--warn)}
+  .datagrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:9px}
+  .datapill{background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:9px 12px;font-size:13px}
+  .datapill b{display:block;font-size:10.5px;color:var(--ink-faint);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+  .findlist{list-style:none;margin:0;padding:0}
+  .findlist li{padding:8px 0;border-bottom:1px solid var(--line);font-size:13.7px;display:flex;gap:10px}
+  .findlist li:last-child{border-bottom:0}
+  .findlist li::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--accent);margin-top:7px;flex:none}
+
+  figure.fig{margin:0}
+  figure.fig img{width:100%;height:auto;max-height:460px;object-fit:contain;display:block;border:1px solid var(--line);border-radius:8px;background:#0b0d11}
+  figure.fig svg{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:8px;background:#fff}
+  figure.fig figcaption{font-size:11.5px;color:var(--ink-faint);margin-top:7px;text-align:center}
+  figure.fig figcaption .cred{display:block;font-size:10.5px;opacity:.8;margin-top:2px}
+
+  /* Examiner-only */
+  .examiner-only{display:none} body.examiner-mode .examiner-only{display:block}
+  .exam-banner{display:none;align-items:center;gap:11px;background:var(--surface);border:1px solid var(--line);border-left:2px solid var(--accent);border-radius:var(--radius-sm);padding:11px 15px;margin-bottom:16px;color:var(--ink-soft);font-size:13px}
+  body.examiner-mode .exam-banner{display:flex}
+  .exam-banner svg{flex:none;stroke:var(--accent)}
+  .conduct{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:13px 16px;font-size:13px;color:var(--ink-soft);margin-bottom:14px}
+  .conduct b{color:var(--ink)}
+  .conduct ul{margin:8px 0 0;padding-left:18px} .conduct li{margin:3px 0}
+
+  /* Assessment sheet */
+  .sheet{border:1px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .sheet-scale{display:flex;gap:16px;flex-wrap:wrap;padding:10px 16px;background:var(--surface-3);font-size:11.5px;color:var(--ink-soft);border-bottom:1px solid var(--line)}
+  .sheet-scale b{color:var(--ink)}
+  .domain{border-bottom:1px solid var(--line)}
+  .domain-head{display:flex;justify-content:space-between;align-items:center;padding:9px 16px;background:var(--surface-2);font-size:11.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:var(--accent)}
+  .domain-head .dsub{font-variant-numeric:tabular-nums;color:var(--ink-faint);font-weight:700}
+  .item{display:grid;grid-template-columns:1fr 118px;gap:12px;align-items:start;padding:12px 16px;border-top:1px solid var(--line)}
+  .domain-head + .item{border-top:0}
+  .item:hover{background:var(--surface-2)}
+  .item-main{display:flex;gap:11px}
+  .item-main .qn{width:22px;height:22px;flex:none;border-radius:6px;background:var(--accent);color:#fff;display:grid;place-items:center;font-size:12px;font-weight:700;margin-top:1px}
+  .item .q{font-size:14px;font-weight:600;color:var(--ink)}
+  .item .model{font-size:12.8px;color:var(--ink-soft);margin-top:4px}
+  .item .model b{color:var(--ink)}
+  .item .crit{display:inline-block;font-size:10px;font-weight:800;color:var(--danger);letter-spacing:.4px;margin-top:4px}
+  .score{display:flex;gap:5px;justify-content:flex-end}
+  .score label{cursor:pointer}
+  .score input{position:absolute;opacity:0;width:0;height:0}
+  .score span{display:grid;place-items:center;width:32px;height:32px;border:1px solid var(--line-strong);border-radius:7px;font-size:14px;font-weight:800;color:var(--ink-faint);background:var(--surface);transition:.1s}
+  .score label:hover span{border-color:var(--accent)}
+  .score input:checked + span{background:var(--accent);border-color:var(--accent);color:#fff}
+  .score .s0 input:checked + span{background:var(--ink-faint);border-color:var(--ink-faint)}
+
+  .sheet-foot{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:14px 16px;background:var(--surface-2);border-top:2px solid var(--line-strong)}
+  .sheet-foot .total{font-size:15px;font-weight:800}
+  .sheet-foot .total span{color:var(--accent)}
+  .bar{flex:1;min-width:150px;height:10px;border-radius:999px;background:var(--surface-3);overflow:hidden;border:1px solid var(--line)}
+  .bar .fill{height:100%;width:0;background:var(--accent);transition:width .3s}
+  .bandnote{font-size:12px;color:var(--ink-faint)}
+
+  .global{margin-top:16px}
+  .global .lab{font-size:11px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;color:var(--ink-faint);margin-bottom:8px}
+  .grating{display:flex;gap:8px;flex-wrap:wrap}
+  .grating label{border:1px solid var(--line-strong);border-radius:8px;padding:8px 13px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--ink-soft)}
+  .grating input{display:none}
+  .grating label:hover{border-color:var(--accent)}
+  .grating input:checked + label{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .std-note{margin-top:12px;font-size:11.5px;color:var(--ink-faint);line-height:1.6;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--radius-sm);padding:11px 14px}
+  .notes{margin-top:12px} .notes textarea{width:100%;min-height:64px;border:1px solid var(--line);border-radius:8px;padding:11px;font-family:inherit;font-size:13px;resize:vertical;color:var(--ink)}
+  .notes textarea:focus{outline:2px solid var(--accent);border-color:var(--accent)}
+
+  .stationnav{display:flex;justify-content:space-between;margin-top:8px;gap:10px}
+  .stationnav button{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-soft);padding:10px 17px;border-radius:8px;font-size:13.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .stationnav button:hover{border-color:var(--accent);color:var(--accent)}
+
+  footer.foot{max-width:1120px;margin:0 auto;padding:0 20px 60px;color:var(--ink-faint);font-size:11.5px}
+  .disc{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:14px 18px;line-height:1.7}
+  .disc b{color:var(--ink-soft)}
+
+  @media (max-width:820px){
+    .ovgrid{grid-template-columns:1fr}
+    .item{grid-template-columns:1fr;gap:8px} .score{justify-content:flex-start}
+    .dc-row{flex-direction:column;gap:3px} .dc-row b{min-width:0}
+  }
+  /* Present-to-candidate: locked projection (opened via #present=sN) shows ONLY the door card */
+  body.present-mode header.topbar,
+  body.present-mode footer.foot,
+  body.present-mode .stationnav,
+  body.present-mode .station-head,
+  body.present-mode .exam-banner{display:none!important}
+  body.present-mode main{max-width:900px;padding-top:36px}
+  body.present-mode .doorcard{box-shadow:0 4px 26px rgba(28,37,48,.10)}
+
+  @media print{
+    /* examiner content prints only in examiner mode → native Ctrl+P in candidate mode leaks nothing */
+    header.topbar,.reveals,.reveal-btn,.stationnav,.exam-banner,.callout,.factrow,.doorcard,#overview{display:none!important}
+    body{background:#fff}
+    body.examiner-mode .view{display:block!important}
+    body.examiner-mode .reveal-panel{display:block!important}
+    body.examiner-mode .examiner-only{display:block!important}
+    body.examiner-mode .card.examiner-only:has(.reveals){display:none!important}
+    .card,.station-head,.hero,.sheet{box-shadow:none;break-inside:avoid}
+    .view{page-break-after:always}
+    .score input:checked + span{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  }
+</style>
+</head>
+<body class="examiner-mode">
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brandrow">
+      <div class="crest" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 3c-2 0-3 1.4-3 3 0 .5 0 .9-.4 1.2C7 8 6 9.3 6 11c0 1 .3 1.7.8 2.3-.3.5-.5 1.1-.5 1.7 0 1.9 1.6 3 3.2 3 .3 1.2 1.3 2 2.5 2s2.2-.8 2.5-2c1.6 0 3.2-1.1 3.2-3 0-.6-.2-1.2-.5-1.7.5-.6.8-1.3.8-2.3 0-1.7-1-3-2.6-3.8C15 6.9 15 6.5 15 6c0-1.6-1-3-3-3Z"/><path d="M12 3v16"/>
+        </svg>
+      </div>
+      <div class="titlewrap">
+        <h1>Saudi Board of Neurology — Final Clinical Examination</h1>
+        <p>Part II · Clinical Examination · Structured oral &amp; OSCE stations — Neurological emergencies (teaching set)</p>
+      </div>
+      <div class="spacer"></div>
+      <div class="modewrap">
+        <span class="mode-label" style="border:1px solid var(--line-strong);border-radius:6px;padding:6px 12px;color:var(--accent);font-weight:700;letter-spacing:.4px">Examiner console</span>
+      </div>
+    </div>
+
+    <nav class="navrow" id="nav">
+      <button class="pill active" data-target="overview">Overview</button>
+      <button class="pill" data-target="s1"><span class="num">1</span>Weakness + speech</button>
+      <button class="pill" data-target="s2"><span class="num">2</span>Breathlessness</button>
+      <button class="pill" data-target="s3"><span class="num">3</span>Visual loss</button>
+      <button class="pill" data-target="s4"><span class="num">4</span>Seizure</button>
+    </nav>
+
+    <div class="toolsrow">
+      <button class="tool-btn" id="printBtn">Print mark sheets</button>
+      <button class="tool-btn" id="resetBtn">Reset scores</button>
+      <span class="hint">Examiner tools — hidden from candidates</span>
+      <div class="timerbox" id="timerBox">
+        <button class="mini" id="tMinus" title="minus 1 min">−</button>
+        <span class="t" id="timerT">10:00</span>
+        <button class="mini" id="tPlus" title="plus 1 min">+</button>
+        <button class="tool-btn" id="tStart" style="margin-left:4px">Start</button>
+        <button class="tool-btn" id="tReset">Reset</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <section class="view active" id="overview">
+    <div class="hero">
+      <h2>Neurological emergencies — 4-station clinical circuit</h2>
+      <p>A teaching circuit modelled on the Saudi Board Final Clinical Examination. Each case is a single integrated station run as a structured oral: the candidate is given a scenario, requests data and images as needed, and is examined against a marked assessment sheet. Share the <b>Candidate file</b> over Zoom; ask your questions and mark here on your own screen.</p>
+      <div class="factrow">
+        <div class="fact"><b>Format:</b> structured oral / OSCE</div>
+        <div class="fact"><b>Stations:</b> 4 (one integrated station each)</div>
+        <div class="fact"><b>Time:</b> 10 minutes per station</div>
+        <div class="fact"><b>Marking:</b> 2 / 1 / 0 per item, four domains</div>
+        <div class="fact"><b>Standard:</b> borderline regression</div>
+      </div>
+      <div class="callout">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M12 9v4m0 4h.01M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+        <div><b>Running it:</b> open the <a href="candidate.html" target="_blank" rel="noopener">Candidate page</a> in a separate tab — that is what you screen-share over Zoom. Keep <em>this</em> Examiner console private: in Zoom, share only the candidate window, never your whole screen. Advance the candidate's station from that window; ask your questions and mark here on the sheet.</div>
+      </div>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examiner conduct — read before you start</div>
+      <div class="conduct">
+        <b>Standardised conduct (modelled on the real exam):</b>
+        <ul>
+          <li>Interact professionally but neutrally — do <b>not</b> teach, coach, hint, or give feedback during the station.</li>
+          <li>Release history, examination findings, results and imaging <b>only when the candidate asks for them</b> (use the reveal buttons).</li>
+          <li>You manage time. To keep pace you may say: <em>“In the interests of time, let's move to the next question”</em> — reassure the candidate this has no bearing on their score.</li>
+          <li>Ask the structured questions on the mark sheet. Score each item <b>2 = done adequately · 1 = partially / attempted · 0 = not done</b>.</li>
+          <li>Also give an independent <b>global rating</b> (Clear Fail → Clear Pass). Checklist and global together feed borderline-regression standard setting (the usual OSCE method; illustrative here).</li>
+        </ul>
+      </div>
+      <p style="font-size:12px;color:var(--ink-faint);margin:0">Domains assessed (SCFHS): Data-Gathering Skills · Reasoning &amp; Analytical Skills · Decision-Making Skills · Professional Attitude. Framework: CanMEDS.</p>
+    </div>
+
+    <div class="ovgrid">
+      <div class="ovcard" data-target="s1"><span class="st-tag">Station 1 · Structured oral · 10 min</span>
+        <h3>Sudden weakness &amp; slurred speech</h3>
+        <div class="ovcard-dx examiner-only">Acute ischaemic stroke · thrombolysis &amp; thrombectomy</div>
+        <p class="examiner-only">Hyperacute assessment, imaging interpretation, reperfusion decisions, BP, complications.</p>
+        <div class="meta"><span><b>Category:</b> assessment &amp; management</span></div>
+      </div>
+      <div class="ovcard" data-target="s2"><span class="st-tag">Station 2 · Structured oral · 10 min</span>
+        <h3>Breathlessness &amp; weak swallow</h3>
+        <div class="ovcard-dx examiner-only">Myasthenic crisis · neuromuscular respiratory failure</div>
+        <p class="examiner-only">Recognition, bedside respiratory assessment, airway threshold, definitive therapy.</p>
+        <div class="meta"><span><b>Category:</b> assessment &amp; management</span></div>
+      </div>
+      <div class="ovcard" data-target="s3"><span class="st-tag">Station 3 · Structured oral · 10 min</span>
+        <h3>Painful visual loss in one eye</h3>
+        <div class="ovcard-dx examiner-only">Optic neuritis · first presentation of MS</div>
+        <p class="examiner-only">Localisation, MRI interpretation, ONTT-based treatment, MS relationship.</p>
+        <div class="meta"><span><b>Category:</b> assessment &amp; management</span></div>
+      </div>
+      <div class="ovcard" data-target="s4"><span class="st-tag">Station 4 · Structured oral · 10 min</span>
+        <h3>Prolonged, ongoing seizure</h3>
+        <div class="ovcard-dx examiner-only">Convulsive status epilepticus</div>
+        <p class="examiner-only">Timed pharmacological escalation, cause-hunting, refractory plan.</p>
+        <div class="meta"><span><b>Category:</b> resuscitation &amp; management</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== STATION 1 ===================== -->
+  <section class="view" id="s1">
+    <div class="station-head">
+      <div class="badge">1</div>
+      <div>
+        <div class="presenting-title">Sudden right-sided weakness &amp; slurred speech</div>
+        <h2 class="dx-title">Acute ischaemic stroke</h2>
+        <div class="sub">Station 1 · Structured oral · 10 minutes</div>
+      </div>
+      <div class="scorechip"><div><div class="lab">Checklist</div><div class="val" data-score="s1">0 / 0</div></div><div class="band b-cf" data-band="s1">Clear Fail</div></div>
+    </div>
+
+    <div class="doorcard">
+      <div class="dc-head"><span class="l">Candidate instructions</span><span class="r">Station 1 · 10 minutes</span></div>
+      <div class="dc-body">
+        <p class="dc-vignette">You are the on-call neurology registrar in the Emergency Department at 03:10. A 68-year-old man is brought in by his family with sudden right-sided weakness and slurred speech that began about 90 minutes ago.</p>
+        <div class="dc-instr"><b>Task.</b> Assess and manage this patient. You have 10 minutes. The examiner will guide the station and provide information only when you request it.</div>
+      </div>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examiner materials — release ONLY when the candidate specifically asks for them</div>
+      <div class="reveals">
+        <button class="reveal-btn" data-panel="s1ph"><span class="chev">▸</span> History / background</button>
+        <button class="reveal-btn" data-panel="s1p0"><span class="chev">▸</span> Vital signs</button>
+        <button class="reveal-btn" data-panel="s1p1"><span class="chev">▸</span> Examination / NIHSS</button>
+        <button class="reveal-btn" data-panel="s1p2"><span class="chev">▸</span> Bloods &amp; ECG</button>
+        <button class="reveal-btn" data-panel="s1p3"><span class="chev">▸</span> Non-contrast CT head</button>
+      </div>
+      <div class="reveal-panel" id="s1ph">
+        <ul class="findlist">
+          <li>Last seen well 90 minutes ago; found unable to lift the right arm and speaking unclearly.</li>
+          <li>Past history: hypertension, type 2 diabetes, atrial fibrillation — <b>not</b> on anticoagulation.</li>
+          <li>No recent surgery, trauma or bleeding; on no anticoagulants; independent at baseline.</li>
+        </ul>
+      </div>
+      <div class="reveal-panel" id="s1p0">
+        <div class="vitals">
+          <div class="vital warn2"><div class="lab">BP</div><div class="num">182/98</div></div>
+          <div class="vital"><div class="lab">HR</div><div class="num">98 irr</div></div>
+          <div class="vital"><div class="lab">RR</div><div class="num">16</div></div>
+          <div class="vital"><div class="lab">SpO₂</div><div class="num">97%</div></div>
+          <div class="vital"><div class="lab">Temp</div><div class="num">36.8</div></div>
+          <div class="vital"><div class="lab">Glucose</div><div class="num">8.1</div></div>
+        </div>
+      </div>
+      <div class="reveal-panel" id="s1p1">
+        <ul class="findlist">
+          <li>Alert (GCS 15); dysarthric with expressive dysphasia (non-fluent, naming impaired).</li>
+          <li>Forced gaze deviation to the left; right homonymous hemianopia.</li>
+          <li>Right lower facial droop; right arm 1/5, right leg 2/5; reduced sensation and inattention on the right.</li>
+          <li><b>NIHSS ≈ 18</b> (moderate–severe).</li>
+        </ul>
+      </div>
+      <div class="reveal-panel" id="s1p2">
+        <div class="datagrid">
+          <div class="datapill"><b>Glucose</b>8.1 mmol/L</div><div class="datapill"><b>Platelets</b>246 ×10⁹/L</div>
+          <div class="datapill"><b>INR</b>1.0</div><div class="datapill"><b>aPTT</b>Normal</div>
+          <div class="datapill"><b>Creatinine</b>84 µmol/L</div><div class="datapill"><b>ECG</b>Atrial fibrillation ~98</div>
+        </div>
+      </div>
+      <div class="reveal-panel" id="s1p3">
+        <figure class="fig">
+          <img src="osce-images/stroke-ct.jpg" alt="Non-contrast CT head, hyperdense left MCA sign" loading="lazy">
+          <figcaption>Non-contrast CT — hyperdense <b>left</b> MCA (“dense artery”) sign; no haemorrhage. CTA (on request): occlusion of the left M1 segment.
+            <span class="cred">Image: Wikimedia Commons, CC BY-SA 3.0.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="exam-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span><b>Examiner mark sheet below.</b> Ask each item; score 2 / 1 / 0. Do not share this view.</span>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examinee assessment sheet — Station 1 (Acute stroke &amp; thrombolysis)</div>
+      <div class="sheet" data-station="s1">
+        <div class="sheet-scale"><span><b>2</b> Done adequately</span><span><b>1</b> Partially / attempted</span><span><b>0</b> Not done</span></div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Data-Gathering Skills</span><span class="dsub" data-dsub>0 / 6</span></div>
+          <div class="item"><div class="item-main"><span class="qn">1</span><div><div class="q">What must you establish on history?</div><div class="model"><b>Model:</b> time last-known-well (here 90 min); thrombolysis contraindication screen — recent surgery/trauma, MI, bleeding disorder/anticoagulation, prior stroke or intracranial haemorrhage; hypoglycaemia symptoms.</div></div></div><div class="score"><label><input type="radio" name="s1i1" value="2"><span>2</span></label><label><input type="radio" name="s1i1" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i1" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">2</span><div><div class="q">Interpret the examination and localise.</div><div class="model"><b>Model:</b> left (dominant) MCA territory — right face/arm&gt;leg weakness, expressive dysphasia, left gaze deviation, right hemianopia/inattention; AF → likely cardioembolic. NIHSS limitations: weighted to LOC; scores higher for dominant/left-hemisphere strokes; over-scores prior deficits.</div></div></div><div class="score"><label><input type="radio" name="s1i2" value="2"><span>2</span></label><label><input type="radio" name="s1i2" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i2" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">3</span><div><div class="q">What investigations, and in what order?</div><div class="model"><b>Model:</b> POC glucose; <b>non-contrast CT first</b> (exclude haemorrhage); CT angiography for large-vessel occlusion (± CT perfusion for late windows); CBC/platelets, coagulation/INR, U&amp;E, ECG. Do not delay lysis for labs unless bleeding risk.</div></div></div><div class="score"><label><input type="radio" name="s1i3" value="2"><span>2</span></label><label><input type="radio" name="s1i3" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i3" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Reasoning &amp; Analytical Skills</span><span class="dsub" data-dsub>0 / 6</span></div>
+          <div class="item"><div class="item-main"><span class="qn">4</span><div><div class="q">Interpret the CT head.</div><div class="model"><b>Model:</b> hyperdense left MCA sign, no haemorrhage, early loss of grey–white differentiation in the left MCA territory. CTA: left M1 occlusion (large-vessel occlusion).</div></div></div><div class="score"><label><input type="radio" name="s1i4" value="2"><span>2</span></label><label><input type="radio" name="s1i4" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i4" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">5</span><div><div class="q">Is he a thrombolysis candidate? Justify; agent and dose.</div><div class="model"><b>Model:</b> yes — within 4.5 h, no haemorrhage, no contraindication. <b>Alteplase 0.9 mg/kg</b> (max 90 mg; 10% bolus, rest over 60 min) <em>or</em> <b>tenecteplase 0.25 mg/kg</b> bolus (max 25 mg). <span class="crit">CRITICAL — imaging before lysis</span></div></div></div><div class="score"><label><input type="radio" name="s1i5" value="2"><span>2</span></label><label><input type="radio" name="s1i5" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i5" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">6</span><div><div class="q">Name the main contraindications to thrombolysis.</div><div class="model"><b>Model:</b> <b>Absolute:</b> intracranial haemorrhage; active internal bleeding; uncontrollable BP &gt;185/110; platelets &lt;100; INR &gt;1.7 / therapeutic anticoagulation; ischaemic stroke or serious head trauma &lt;3 months. <b>Relative / individualised:</b> recent major surgery (~10–14 days); recent GI/GU bleed; DOAC within 48 h. Hypoglycaemia is a stroke mimic — correct the glucose and reassess rather than exclude outright.</div></div></div><div class="score"><label><input type="radio" name="s1i6" value="2"><span>2</span></label><label><input type="radio" name="s1i6" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i6" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Decision-Making Skills</span><span class="dsub" data-dsub>0 / 8</span></div>
+          <div class="item"><div class="item-main"><span class="qn">7</span><div><div class="q">BP is 182/98 — how do you manage it around thrombolysis?</div><div class="model"><b>Model:</b> must be &lt;185/110 before lysis (acceptable now; treat if it rises — labetalol/nicardipine); keep &lt;180/105 for 24 h after. If not reperfusing, permissive hypertension and treat only if &gt;220/120.</div></div></div><div class="score"><label><input type="radio" name="s1i7" value="2"><span>2</span></label><label><input type="radio" name="s1i7" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i7" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">8</span><div><div class="q">CTA shows an M1 occlusion — what now?</div><div class="model"><b>Model:</b> refer for <b>mechanical thrombectomy</b> (proximal LVO). Window ≤6 h; up to 24 h in selected patients with favourable perfusion/clinical mismatch (DAWN/DEFUSE-3); selected large-core infarcts now also benefit (recent trials). Give bridging thrombolysis if eligible; don't delay transfer.</div></div></div><div class="score"><label><input type="radio" name="s1i8" value="2"><span>2</span></label><label><input type="radio" name="s1i8" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i8" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">9</span><div><div class="q">During the infusion he develops severe headache and drops his GCS. And 1 h later, lip swelling?</div><div class="model"><b>Model:</b> stop the infusion; urgent non-contrast CT; send CBC, coagulation and fibrinogen; reverse (cryoprecipitate guided by fibrinogen ± platelets/tranexamic acid) and involve neurosurgery (suspect haemorrhage). Oro-lingual angio-oedema: stop/secure airway, IV methylprednisolone 125–250 mg + antihistamine (± adrenaline if progressing).</div></div></div><div class="score"><label><input type="radio" name="s1i9" value="2"><span>2</span></label><label><input type="radio" name="s1i9" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i9" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">10</span><div><div class="q">Post-thrombolysis care and secondary prevention.</div><div class="model"><b>Model:</b> stroke-unit/monitored bed 24 h; NPO then swallow screen; IV normal saline (no dextrose); <b>aspirin after 24 h + repeat CT first</b>; intermittent pneumatic compression from admission and pharmacological VTE prophylaxis after 24 h; anticoagulate for AF by infarct size; statin.</div></div></div><div class="score"><label><input type="radio" name="s1i10" value="2"><span>2</span></label><label><input type="radio" name="s1i10" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i10" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Professional Attitude</span><span class="dsub" data-dsub>0 / 2</span></div>
+          <div class="item"><div class="item-main"><span class="qn">11</span><div><div class="q">How do you consent the family for thrombolysis?</div><div class="model"><b>Model:</b> clear, empathetic, time-critical explanation — ~6% risk of symptomatic haemorrhage vs meaningful benefit; shared decision; document.</div></div></div><div class="score"><label><input type="radio" name="s1i11" value="2"><span>2</span></label><label><input type="radio" name="s1i11" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s1i11" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="sheet-foot">
+          <div class="total"><span data-total>0</span> / <span data-max>22</span> &nbsp;(<span data-pct>0</span>%)</div>
+          <div class="bar"><div class="fill" data-fill></div></div>
+          <div class="bandnote" data-bandnote>Clear Fail</div>
+        </div>
+      </div>
+
+      <div class="global"><div class="lab">Global rating (independent holistic judgement)</div>
+        <div class="grating">
+          <input type="radio" name="g-s1" id="g-s1-1"><label for="g-s1-1">Clear Fail</label>
+          <input type="radio" name="g-s1" id="g-s1-2"><label for="g-s1-2">Borderline Fail</label>
+          <input type="radio" name="g-s1" id="g-s1-3"><label for="g-s1-3">Borderline Pass</label>
+          <input type="radio" name="g-s1" id="g-s1-4"><label for="g-s1-4">Clear Pass</label>
+        </div>
+      </div>
+      <div class="std-note"><b>Standard setting:</b> bands — Clear Fail &lt;50% · Borderline Fail 50–59% · Borderline Pass 60–69% · Clear Pass ≥70%. OSCEs commonly set the station pass mark by <b>borderline regression</b> (checklist score regressed on the global rating; cut score = the checklist total meeting “Borderline Pass”), with the exam pass mark the mean of station cut scores — shown here illustratively. The 2/1/0 scale and fixed percentage bands shown here are teaching conventions — this tool displays fixed bands for a single candidate and does not compute borderline regression.</div>
+      <div class="notes"><textarea placeholder="Examiner notes / feedback…"></textarea></div>
+    </div>
+
+    <div class="stationnav"><button data-target="overview">← Overview</button><button data-target="s2">Station 2 · Breathlessness →</button></div>
+  </section>
+
+  <!-- ===================== STATION 2 ===================== -->
+  <section class="view" id="s2">
+    <div class="station-head">
+      <div class="badge">2</div>
+      <div>
+        <div class="presenting-title">Progressive breathlessness &amp; difficulty swallowing</div>
+        <h2 class="dx-title">Myasthenic crisis</h2>
+        <div class="sub">Station 2 · Structured oral · 10 minutes</div>
+      </div>
+      <div class="scorechip"><div><div class="lab">Checklist</div><div class="val" data-score="s2">0 / 0</div></div><div class="band b-cf" data-band="s2">Clear Fail</div></div>
+    </div>
+
+    <div class="doorcard">
+      <div class="dc-head"><span class="l">Candidate instructions</span><span class="r">Station 2 · 10 minutes</span></div>
+      <div class="dc-body">
+        <p class="dc-vignette">You are the medical registrar in the Emergency Department resuscitation area. A 34-year-old woman presents with three days of worsening breathlessness, nasal-sounding speech and difficulty swallowing. She can no longer lie flat.</p>
+        <div class="dc-instr"><b>Task.</b> Assess and manage this patient. You have 10 minutes. The examiner will guide the station and provide information only when you request it.</div>
+      </div>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examiner materials — release ONLY when the candidate specifically asks for them</div>
+      <div class="reveals">
+        <button class="reveal-btn" data-panel="s2ph"><span class="chev">▸</span> History / background</button>
+        <button class="reveal-btn" data-panel="s2p0"><span class="chev">▸</span> Vital signs</button>
+        <button class="reveal-btn" data-panel="s2p1"><span class="chev">▸</span> Examination</button>
+        <button class="reveal-btn" data-panel="s2p2"><span class="chev">▸</span> Bedside respiratory tests</button>
+        <button class="reveal-btn" data-panel="s2p3"><span class="chev">▸</span> ABG &amp; bloods</button>
+      </div>
+      <div class="reveal-panel" id="s2ph">
+        <ul class="findlist">
+          <li>Known myasthenia gravis, maintained on pyridostigmine.</li>
+          <li>Chest infection last week — started on <b>azithromycin</b> (a new antibiotic) by a clinic.</li>
+          <li>Weakness is fatigable and worse towards the evening; no chest pain; no other new drugs.</li>
+        </ul>
+      </div>
+      <div class="reveal-panel" id="s2p0">
+        <div class="vitals">
+          <div class="vital warn2"><div class="lab">RR</div><div class="num">28</div></div>
+          <div class="vital flag"><div class="lab">SpO₂</div><div class="num">92%</div></div>
+          <div class="vital warn2"><div class="lab">HR</div><div class="num">112</div></div>
+          <div class="vital"><div class="lab">BP</div><div class="num">138/84</div></div>
+          <div class="vital"><div class="lab">Temp</div><div class="num">37.4</div></div>
+          <div class="vital warn2"><div class="lab">Single-breath count</div><div class="num">12</div></div>
+        </div>
+      </div>
+      <div class="reveal-panel" id="s2p1">
+        <ul class="findlist">
+          <li>Bilateral fatigable ptosis; nasal dysarthria, weak cough, pooled secretions, poor swallow.</li>
+          <li>Neck-flexion weakness; proximal fatigable limb weakness; reflexes preserved; no sensory loss.</li>
+          <li>Using accessory muscles; cannot complete a sentence in one breath.</li>
+        </ul>
+        <figure class="fig" style="margin-top:12px">
+          <img src="osce-images/mg-ptosis.jpg" alt="Ptosis in myasthenia gravis" loading="lazy">
+          <figcaption>Ptosis in myasthenia gravis (fatigable, may be asymmetric).<span class="cred">Image: Wikimedia Commons, CC BY 2.0.</span></figcaption>
+        </figure>
+      </div>
+      <div class="reveal-panel" id="s2p2">
+        <div class="datagrid">
+          <div class="datapill"><b>FVC</b>0.9 L (≈14 mL/kg) ↓</div>
+          <div class="datapill"><b>NIF / MIP</b>−22 cmH₂O (weak)</div>
+          <div class="datapill"><b>Single-breath count</b>12 (normal &gt;25)</div>
+          <div class="datapill"><b>Cough</b>Weak, wet</div>
+        </div>
+      </div>
+      <div class="reveal-panel" id="s2p3">
+        <div class="datagrid">
+          <div class="datapill"><b>ABG (air)</b>pH 7.34 · pCO₂ 6.9 kPa ↑ · pO₂ 9.1</div>
+          <div class="datapill"><b>Interpretation</b>Rising CO₂ = a late, ominous sign</div>
+          <div class="datapill"><b>CBC / CRP</b>Mild leucocytosis, CRP 40</div>
+          <div class="datapill"><b>Chest X-ray</b>Right basal infiltrate</div>
+          <div class="datapill"><b>Pupils</b>Normal; no fasciculations</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="exam-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span><b>Examiner mark sheet below.</b> Ask each item; score 2 / 1 / 0.</span>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examinee assessment sheet — Station 2 (Myasthenic crisis)</div>
+      <div class="sheet" data-station="s2">
+        <div class="sheet-scale"><span><b>2</b> Done adequately</span><span><b>1</b> Partially / attempted</span><span><b>0</b> Not done</span></div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Data-Gathering Skills</span><span class="dsub" data-dsub>0 / 6</span></div>
+          <div class="item"><div class="item-main"><span class="qn">1</span><div><div class="q">What is the diagnosis and what makes it a “crisis”?</div><div class="model"><b>Model:</b> myasthenic crisis — MG exacerbation causing respiratory failure or inability to protect the airway, requiring ventilatory support. Bulbar + respiratory weakness are the danger signs.</div></div></div><div class="score"><label><input type="radio" name="s2i1" value="2"><span>2</span></label><label><input type="radio" name="s2i1" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i1" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">2</span><div><div class="q">How do you assess respiratory status at the bedside?</div><div class="model"><b>Model:</b> serial <b>FVC</b> and <b>NIF/MIP</b>, single-breath count, cough strength, neck-flexion strength, orthopnoea, sentence length. <span class="crit">CRITICAL</span></div></div></div><div class="score"><label><input type="radio" name="s2i2" value="2"><span>2</span></label><label><input type="radio" name="s2i2" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i2" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">3</span><div><div class="q">Why not simply rely on the oxygen saturation / ABG?</div><div class="model"><b>Model:</b> in neuromuscular failure the SpO₂ falls and the CO₂ rises only <b>late</b> — a normal saturation with an FVC of 0.9 L is a patient about to arrest. The trend of FVC/NIF is what matters.</div></div></div><div class="score"><label><input type="radio" name="s2i3" value="2"><span>2</span></label><label><input type="radio" name="s2i3" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i3" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Reasoning &amp; Analytical Skills</span><span class="dsub" data-dsub>0 / 4</span></div>
+          <div class="item"><div class="item-main"><span class="qn">4</span><div><div class="q">What precipitated this, and what will you screen for?</div><div class="model"><b>Model:</b> infection (her pneumonia) + a precipitating drug (the macrolide). Also surgery, pregnancy, tapering immunosuppression, thyroid dysfunction. Drugs to avoid: aminoglycosides, fluoroquinolones, macrolides, β-blockers, IV magnesium, procainamide, quinine, checkpoint inhibitors.</div></div></div><div class="score"><label><input type="radio" name="s2i4" value="2"><span>2</span></label><label><input type="radio" name="s2i4" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i4" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">5</span><div><div class="q">How would you distinguish this from a cholinergic crisis?</div><div class="model"><b>Model:</b> cholinergic = over-treatment → muscarinic excess (SLUDGE, miosis, bradycardia, sweating) plus nicotinic features (fasciculations, weakness). Here: normal pupils, no fasciculations, clear precipitant → myasthenic. When in doubt, secure the airway and hold the anticholinesterase.</div></div></div><div class="score"><label><input type="radio" name="s2i5" value="2"><span>2</span></label><label><input type="radio" name="s2i5" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i5" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Decision-Making Skills</span><span class="dsub" data-dsub>0 / 6</span></div>
+          <div class="item"><div class="item-main"><span class="qn">6</span><div><div class="q">At what point would you secure the airway?</div><div class="model"><b>Model:</b> the “20·30·40 rule” (FVC &lt; 20 mL/kg ≈ &lt;1 L, NIF weaker than −30 cmH₂O, MEP &lt; 40) is an escalation / ICU-assessment guide, not an automatic trigger — decide with the trend, cough, secretions and bulbar function. This patient needs intubation for bulbar failure, pooled secretions, weak cough and rising CO₂; the numbers reinforce it.</div></div></div><div class="score"><label><input type="radio" name="s2i6" value="2"><span>2</span></label><label><input type="radio" name="s2i6" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i6" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">7</span><div><div class="q">Outline your definitive management.</div><div class="model"><b>Model:</b> ICU; airway/ventilatory support; treat the pneumonia and stop the offending drug; <b>IVIG 2 g/kg</b> over 2–5 days <em>or</em> <b>plasma exchange</b>. Corticosteroids to follow — beware transient early worsening.</div></div></div><div class="score"><label><input type="radio" name="s2i7" value="2"><span>2</span></label><label><input type="radio" name="s2i7" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i7" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">8</span><div><div class="q">What do you do with the pyridostigmine peri-intubation?</div><div class="model"><b>Model:</b> hold it when intubated (reduces secretions, avoids cholinergic confusion); restart later.</div></div></div><div class="score"><label><input type="radio" name="s2i8" value="2"><span>2</span></label><label><input type="radio" name="s2i8" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i8" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Professional Attitude</span><span class="dsub" data-dsub>0 / 2</span></div>
+          <div class="item"><div class="item-main"><span class="qn">9</span><div><div class="q">Communication &amp; escalation.</div><div class="model"><b>Model:</b> early, clear escalation to ICU/anaesthesia; explains the situation to the patient/family; structured hand-over.</div></div></div><div class="score"><label><input type="radio" name="s2i9" value="2"><span>2</span></label><label><input type="radio" name="s2i9" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s2i9" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="sheet-foot">
+          <div class="total"><span data-total>0</span> / <span data-max>18</span> &nbsp;(<span data-pct>0</span>%)</div>
+          <div class="bar"><div class="fill" data-fill></div></div>
+          <div class="bandnote" data-bandnote>Clear Fail</div>
+        </div>
+      </div>
+
+      <div class="global"><div class="lab">Global rating (independent holistic judgement)</div>
+        <div class="grating">
+          <input type="radio" name="g-s2" id="g-s2-1"><label for="g-s2-1">Clear Fail</label>
+          <input type="radio" name="g-s2" id="g-s2-2"><label for="g-s2-2">Borderline Fail</label>
+          <input type="radio" name="g-s2" id="g-s2-3"><label for="g-s2-3">Borderline Pass</label>
+          <input type="radio" name="g-s2" id="g-s2-4"><label for="g-s2-4">Clear Pass</label>
+        </div>
+      </div>
+      <div class="std-note"><b>Standard setting:</b> bands — Clear Fail &lt;50% · Borderline Fail 50–59% · Borderline Pass 60–69% · Clear Pass ≥70%. Borderline regression is the usual OSCE method for setting the cohort pass mark (shown here illustratively); the fixed bands are a teaching convention (this tool does not compute regression).</div>
+      <div class="notes"><textarea placeholder="Examiner notes / feedback…"></textarea></div>
+    </div>
+
+    <div class="stationnav"><button data-target="s1">← Station 1</button><button data-target="s3">Station 3 · Visual loss →</button></div>
+  </section>
+
+  <!-- ===================== STATION 3 ===================== -->
+  <section class="view" id="s3">
+    <div class="station-head">
+      <div class="badge">3</div>
+      <div>
+        <div class="presenting-title">Painful loss of vision in one eye</div>
+        <h2 class="dx-title">Optic neuritis / first presentation of MS</h2>
+        <div class="sub">Station 3 · Structured oral · 10 minutes</div>
+      </div>
+      <div class="scorechip"><div><div class="lab">Checklist</div><div class="val" data-score="s3">0 / 0</div></div><div class="band b-cf" data-band="s3">Clear Fail</div></div>
+    </div>
+
+    <div class="doorcard">
+      <div class="dc-head"><span class="l">Candidate instructions</span><span class="r">Station 3 · 10 minutes</span></div>
+      <div class="dc-body">
+        <p class="dc-vignette">You are the on-call neurology registrar in the Emergency Department. A 27-year-old woman presents with four days of progressive blurring and dimming of vision in her left eye, with pain that is worse on eye movement and colours that look “washed out”.</p>
+        <div class="dc-instr"><b>Task.</b> Assess and manage this patient. You have 10 minutes. The examiner will guide the station and provide information only when you request it.</div>
+      </div>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examiner materials — release ONLY when the candidate specifically asks for them</div>
+      <div class="reveals">
+        <button class="reveal-btn" data-panel="s3ph"><span class="chev">▸</span> History / background</button>
+        <button class="reveal-btn" data-panel="s3p0"><span class="chev">▸</span> Baseline / acuity</button>
+        <button class="reveal-btn" data-panel="s3p1"><span class="chev">▸</span> Eye examination</button>
+        <button class="reveal-btn" data-panel="s3p2"><span class="chev">▸</span> MRI orbits</button>
+        <button class="reveal-btn" data-panel="s3p3"><span class="chev">▸</span> MRI brain</button>
+      </div>
+      <div class="reveal-panel" id="s3ph">
+        <ul class="findlist">
+          <li>Six months ago: transient numbness of the right leg lasting about two weeks — not reported at the time.</li>
+          <li>Otherwise well; no regular medications; no bladder or bowel symptoms.</li>
+          <li>No recent illness; non-smoker.</li>
+        </ul>
+      </div>
+      <div class="reveal-panel" id="s3p0">
+        <div class="vitals">
+          <div class="vital"><div class="lab">BP</div><div class="num">118/72</div></div>
+          <div class="vital"><div class="lab">HR</div><div class="num">76</div></div>
+          <div class="vital"><div class="lab">Temp</div><div class="num">36.9</div></div>
+          <div class="vital"><div class="lab">Left VA</div><div class="num">6/24</div></div>
+          <div class="vital"><div class="lab">Right VA</div><div class="num">6/6</div></div>
+        </div>
+      </div>
+      <div class="reveal-panel" id="s3p1">
+        <ul class="findlist">
+          <li>Reduced acuity left (6/24); marked <b>red desaturation</b> left eye.</li>
+          <li><b>Relative afferent pupillary defect (RAPD)</b> on the left; central scotoma; pain on eye movement.</li>
+          <li>Fundus normal (retrobulbar) — swelling would indicate papillitis; normal in ~2⁄3.</li>
+          <li>Other cranial nerves and limbs normal today.</li>
+        </ul>
+      </div>
+      <div class="reveal-panel" id="s3p2">
+        <ul class="findlist">
+          <li><b>MRI orbits</b> (coronal fat-sat T2 / post-gad T1): mild enlargement, T2 hyperintensity and subtle enhancement of the <b>left</b> optic nerve — in keeping with optic neuritis.</li>
+        </ul>
+      </div>
+      <div class="reveal-panel" id="s3p3">
+        <figure class="fig">
+          <img src="osce-images/ms-brain-mri-axial-flair.png" alt="Axial FLAIR MRI showing periventricular MS lesions" loading="lazy">
+          <figcaption>Axial FLAIR brain — multiple periventricular ovoid white-matter lesions typical of demyelination (MS).
+            <span class="cred">Image: Wikimedia Commons (PLoS ONE), CC BY 2.5.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="exam-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span><b>Examiner mark sheet below.</b> Ask each item; score 2 / 1 / 0.</span>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examinee assessment sheet — Station 3 (Optic neuritis / MS)</div>
+      <div class="sheet" data-station="s3">
+        <div class="sheet-scale"><span><b>2</b> Done adequately</span><span><b>1</b> Partially / attempted</span><span><b>0</b> Not done</span></div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Data-Gathering Skills</span><span class="dsub" data-dsub>0 / 6</span></div>
+          <div class="item"><div class="item-main"><span class="qn">1</span><div><div class="q">What are the key confirmatory signs, and the diagnosis?</div><div class="model"><b>Model:</b> left optic neuritis — subacute painful monocular loss (worse on eye movement), <b>RAPD</b>, red/colour desaturation, central scotoma; fundus often normal.</div></div></div><div class="score"><label><input type="radio" name="s3i1" value="2"><span>2</span></label><label><input type="radio" name="s3i1" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i1" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">2</span><div><div class="q">Demonstrate how you elicit a RAPD.</div><div class="model"><b>Model:</b> swinging-flashlight test in a dim room — when light swings to the affected eye, both pupils paradoxically dilate (reduced afferent input). <span class="crit">CRITICAL sign</span></div></div></div><div class="score"><label><input type="radio" name="s3i2" value="2"><span>2</span></label><label><input type="radio" name="s3i2" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i2" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">3</span><div><div class="q">What investigations would you request?</div><div class="model"><b>Model:</b> MRI brain + orbits with gadolinium; acuity/colour/fields ± OCT; bloods to exclude mimics; if atypical → AQP4/MOG antibodies; consider LP for oligoclonal bands.</div></div></div><div class="score"><label><input type="radio" name="s3i3" value="2"><span>2</span></label><label><input type="radio" name="s3i3" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i3" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Reasoning &amp; Analytical Skills</span><span class="dsub" data-dsub>0 / 6</span></div>
+          <div class="item"><div class="item-main"><span class="qn">4</span><div><div class="q">Interpret the MRI and link it to MS.</div><div class="model"><b>Model:</b> left optic nerve T2 change; brain shows periventricular ovoid lesions / Dawson's fingers → dissemination in space. Establish dissemination in time with a gadolinium (post-contrast T1) study or the earlier clinical episode, then apply the McDonald criteria (the 2024 revision now counts the optic nerve as a fifth region); CSF oligoclonal bands can substitute for dissemination in time.</div></div></div><div class="score"><label><input type="radio" name="s3i4" value="2"><span>2</span></label><label><input type="radio" name="s3i4" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i4" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">5</span><div><div class="q">What atypical features would make you suspect NMOSD/MOGAD?</div><div class="model"><b>Model:</b> red flags — severe or bilateral loss, very poor recovery, marked/persistent pain, simultaneous or recurrent episodes. AQP4-NMOSD: chiasmal/posterior involvement, severe residual loss. MOGAD: bilateral, longitudinally extensive anterior nerve, disc swelling, perineural enhancement. Send AQP4 and MOG antibodies; PLEX if severe or steroid-refractory.</div></div></div><div class="score"><label><input type="radio" name="s3i5" value="2"><span>2</span></label><label><input type="radio" name="s3i5" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i5" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">6</span><div><div class="q">What is the prognosis of optic neuritis?</div><div class="model"><b>Model:</b> most recover good vision over weeks; it is a common first demyelinating event and raises MS risk (stratified by baseline MRI lesions).</div></div></div><div class="score"><label><input type="radio" name="s3i6" value="2"><span>2</span></label><label><input type="radio" name="s3i6" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i6" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Decision-Making Skills</span><span class="dsub" data-dsub>0 / 4</span></div>
+          <div class="item"><div class="item-main"><span class="qn">7</span><div><div class="q">What is the acute treatment?</div><div class="model"><b>Model:</b> <b>IV methylprednisolone 1 g/day for 3–5 days</b> (± short oral taper) — speeds recovery. Avoid standard-dose oral prednisone alone (ONTT: higher recurrence). PLEX if severe/steroid-refractory. <span class="crit">CRITICAL</span></div></div></div><div class="score"><label><input type="radio" name="s3i7" value="2"><span>2</span></label><label><input type="radio" name="s3i7" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i7" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">8</span><div><div class="q">What is the ongoing plan?</div><div class="model"><b>Model:</b> refer to MS/neuro-ophthalmology; discuss disease-modifying therapy; counsel and safety-net; monitor recovery.</div></div></div><div class="score"><label><input type="radio" name="s3i8" value="2"><span>2</span></label><label><input type="radio" name="s3i8" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i8" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Professional Attitude</span><span class="dsub" data-dsub>0 / 2</span></div>
+          <div class="item"><div class="item-main"><span class="qn">9</span><div><div class="q">How do you counsel a young patient facing a possible MS diagnosis?</div><div class="model"><b>Model:</b> honest, staged, hopeful information; checks understanding; avoids premature labelling before criteria met; arranges support and follow-up.</div></div></div><div class="score"><label><input type="radio" name="s3i9" value="2"><span>2</span></label><label><input type="radio" name="s3i9" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s3i9" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="sheet-foot">
+          <div class="total"><span data-total>0</span> / <span data-max>18</span> &nbsp;(<span data-pct>0</span>%)</div>
+          <div class="bar"><div class="fill" data-fill></div></div>
+          <div class="bandnote" data-bandnote>Clear Fail</div>
+        </div>
+      </div>
+
+      <div class="global"><div class="lab">Global rating (independent holistic judgement)</div>
+        <div class="grating">
+          <input type="radio" name="g-s3" id="g-s3-1"><label for="g-s3-1">Clear Fail</label>
+          <input type="radio" name="g-s3" id="g-s3-2"><label for="g-s3-2">Borderline Fail</label>
+          <input type="radio" name="g-s3" id="g-s3-3"><label for="g-s3-3">Borderline Pass</label>
+          <input type="radio" name="g-s3" id="g-s3-4"><label for="g-s3-4">Clear Pass</label>
+        </div>
+      </div>
+      <div class="std-note"><b>Standard setting:</b> bands — Clear Fail &lt;50% · Borderline Fail 50–59% · Borderline Pass 60–69% · Clear Pass ≥70%. Borderline regression is the usual OSCE method for setting the cohort pass mark (shown here illustratively); the fixed bands are a teaching convention (this tool does not compute regression).</div>
+      <div class="notes"><textarea placeholder="Examiner notes / feedback…"></textarea></div>
+    </div>
+
+    <div class="stationnav"><button data-target="s2">← Station 2</button><button data-target="s4">Station 4 · Seizure →</button></div>
+  </section>
+
+  <!-- ===================== STATION 4 ===================== -->
+  <section class="view" id="s4">
+    <div class="station-head">
+      <div class="badge">4</div>
+      <div>
+        <div class="presenting-title">Prolonged, ongoing convulsion</div>
+        <h2 class="dx-title">Convulsive status epilepticus</h2>
+        <div class="sub">Station 4 · Structured oral · 10 minutes</div>
+      </div>
+      <div class="scorechip"><div><div class="lab">Checklist</div><div class="val" data-score="s4">0 / 0</div></div><div class="band b-cf" data-band="s4">Clear Fail</div></div>
+    </div>
+
+    <div class="doorcard">
+      <div class="dc-head"><span class="l">Candidate instructions</span><span class="r">Station 4 · 10 minutes</span></div>
+      <div class="dc-body">
+        <p class="dc-vignette">You are the medical registrar leading the resuscitation. A 24-year-old man has just arrived by ambulance and is convulsing — generalised tonic–clonic activity that, according to the paramedics, has been continuous for at least 8 minutes.</p>
+        <div class="dc-instr"><b>Task.</b> Manage this patient. You have 10 minutes. The examiner will guide the station and provide information only when you request it.</div>
+      </div>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examiner materials — release ONLY when the candidate specifically asks for them</div>
+      <div class="reveals">
+        <button class="reveal-btn" data-panel="s4ph"><span class="chev">▸</span> Collateral history</button>
+        <button class="reveal-btn" data-panel="s4p0"><span class="chev">▸</span> On arrival (still seizing)</button>
+        <button class="reveal-btn" data-panel="s4p1"><span class="chev">▸</span> Point-of-care &amp; bloods</button>
+        <button class="reveal-btn" data-panel="s4p2"><span class="chev">▸</span> Course after first-line</button>
+        <button class="reveal-btn" data-panel="s4p3"><span class="chev">▸</span> EEG (in ICU)</button>
+      </div>
+      <div class="reveal-panel" id="s4ph">
+        <ul class="findlist">
+          <li>Known epilepsy; ran out of his medication a few days ago.</li>
+          <li>Paramedics gave <b>one dose of a benzodiazepine ~4 minutes ago</b> with no effect.</li>
+          <li>No trauma reported; no fever; no other collateral available.</li>
+        </ul>
+      </div>
+      <div class="reveal-panel" id="s4p0">
+        <div class="vitals">
+          <div class="vital flag"><div class="lab">State</div><div class="num">Seizing</div></div>
+          <div class="vital warn2"><div class="lab">SpO₂</div><div class="num">89%</div></div>
+          <div class="vital warn2"><div class="lab">HR</div><div class="num">126</div></div>
+          <div class="vital"><div class="lab">BP</div><div class="num">148/90</div></div>
+          <div class="vital warn2"><div class="lab">Temp</div><div class="num">37.9</div></div>
+          <div class="vital"><div class="lab">Glucose</div><div class="num">?</div></div>
+        </div>
+      </div>
+      <div class="reveal-panel" id="s4p1">
+        <div class="datagrid">
+          <div class="datapill"><b>Capillary glucose</b>6.4 mmol/L</div><div class="datapill"><b>Na⁺</b>137 mmol/L</div>
+          <div class="datapill"><b>Ca²⁺ / Mg²⁺</b>Normal</div><div class="datapill"><b>AED level</b>Sub-therapeutic</div>
+          <div class="datapill"><b>Tox / alcohol</b>Pending</div><div class="datapill"><b>ABG</b>Mixed acidosis, lactate ↑</div>
+        </div>
+      </div>
+      <div class="reveal-panel" id="s4p2">
+        <ul class="findlist">
+          <li>After a full-dose IV benzodiazepine he is <b>still convulsing at ~15 minutes</b>.</li>
+          <li>You give a second-line IV antiseizure medication at full loading dose.</li>
+          <li>Seizure continues at ~35 minutes → <b>refractory status</b>: prepare for intubation, anaesthetic infusion, ICU and continuous EEG.</li>
+        </ul>
+      </div>
+      <div class="reveal-panel" id="s4p3">
+        <figure class="fig">
+          <img src="osce-images/status-eeg-alt-seizure-onset.png" alt="EEG showing generalised epileptiform discharges" loading="lazy">
+          <figcaption>Illustrative EEG — generalised spike-and-wave discharges (a teaching image, not this patient's trace). In status epilepticus, continuous EEG is used to confirm ongoing or non-convulsive seizures, especially after paralysis/anaesthesia.
+            <span class="cred">Image: Wikimedia Commons, CC BY-SA.</span></figcaption>
+        </figure>
+      </div>
+    </div>
+
+    <div class="exam-banner">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+      <span><b>Examiner mark sheet below.</b> Ask each item; score 2 / 1 / 0.</span>
+    </div>
+
+    <div class="card examiner-only">
+      <div class="kicker">Examinee assessment sheet — Station 4 (Status epilepticus)</div>
+      <div class="sheet" data-station="s4">
+        <div class="sheet-scale"><span><b>2</b> Done adequately</span><span><b>1</b> Partially / attempted</span><span><b>0</b> Not done</span></div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Data-Gathering Skills</span><span class="dsub" data-dsub>0 / 4</span></div>
+          <div class="item"><div class="item-main"><span class="qn">1</span><div><div class="q">Define status epilepticus.</div><div class="model"><b>Model:</b> ≥5 minutes of continuous seizure, or ≥2 seizures without recovery of consciousness in between (operational, convulsive).</div></div></div><div class="score"><label><input type="radio" name="s4i1" value="2"><span>2</span></label><label><input type="radio" name="s4i1" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i1" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">2</span><div><div class="q">Walk through your first five minutes.</div><div class="model"><b>Model:</b> ABC, high-flow O₂, airway adjuncts/suction, two IV cannulae, monitoring; <b>capillary glucose</b> (thiamine before glucose if malnourished/alcohol — but never delay dextrose for confirmed hypoglycaemia); <b>give the first-line benzodiazepine immediately and in parallel</b> (he has already seized ~8 min — see next item); send bloods (glucose, U&amp;E, Ca/Mg, AED levels, tox, ABG); time the seizure. <span class="crit">CRITICAL</span></div></div></div><div class="score"><label><input type="radio" name="s4i2" value="2"><span>2</span></label><label><input type="radio" name="s4i2" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i2" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Reasoning &amp; Analytical Skills</span><span class="dsub" data-dsub>0 / 4</span></div>
+          <div class="item"><div class="item-main"><span class="qn">3</span><div><div class="q">What causes must you actively exclude, and how?</div><div class="model"><b>Model:</b> here AED non-adherence/withdrawal. Also hypoglycaemia, hyponatraemia, hypocalcaemia, CNS infection, stroke/haemorrhage, trauma, toxins/alcohol withdrawal, eclampsia. Work-up: glucose/electrolytes, AED levels, tox, CT head, LP if infection suspected, EEG; empiric aciclovir/antibiotics if meningoencephalitis likely.</div></div></div><div class="score"><label><input type="radio" name="s4i3" value="2"><span>2</span></label><label><input type="radio" name="s4i3" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i3" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">4</span><div><div class="q">Why is timing so important, and what is the commonest error?</div><div class="model"><b>Model:</b> longer seizures are harder to stop and cause neuronal injury; escalate by the clock without delay. Commonest error: <b>under-dosing benzodiazepines</b> and not moving to second-line.</div></div></div><div class="score"><label><input type="radio" name="s4i4" value="2"><span>2</span></label><label><input type="radio" name="s4i4" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i4" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Decision-Making Skills</span><span class="dsub" data-dsub>0 / 8</span></div>
+          <div class="item"><div class="item-main"><span class="qn">5</span><div><div class="q">First-line drug, route and dose?</div><div class="model"><b>Model:</b> a benzodiazepine — <b>lorazepam 0.1 mg/kg IV</b> (max 4 mg/dose, may repeat once), or <b>IM midazolam 10 mg</b> if no IV, or diazepam 0.15–0.2 mg/kg IV (max 10 mg). <span class="crit">CRITICAL</span></div></div></div><div class="score"><label><input type="radio" name="s4i5" value="2"><span>2</span></label><label><input type="radio" name="s4i5" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i5" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">6</span><div><div class="q">Still fitting after benzodiazepines — what next?</div><div class="model"><b>Model:</b> second-line IV antiseizure medication at full loading dose — <b>levetiracetam 60 mg/kg</b> (max 4.5 g), <b>valproate 40 mg/kg</b> (max 3 g), or <b>fosphenytoin 20 mg PE/kg</b> (max 1.5 g PE). ESETT: broadly equivalent.</div></div></div><div class="score"><label><input type="radio" name="s4i6" value="2"><span>2</span></label><label><input type="radio" name="s4i6" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i6" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">7</span><div><div class="q">It is now refractory. Plan?</div><div class="model"><b>Model:</b> rapid-sequence intubation + continuous anaesthetic infusion (midazolam, propofol, or pentobarbital); ICU with continuous EEG to confirm suppression / detect non-convulsive status.</div></div></div><div class="score"><label><input type="radio" name="s4i7" value="2"><span>2</span></label><label><input type="radio" name="s4i7" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i7" value="0"><span>0</span></label></div></div>
+          <div class="item"><div class="item-main"><span class="qn">8</span><div><div class="q">Interpret the EEG and its role here.</div><div class="model"><b>Model:</b> generalised epileptiform discharges; after paralysis/anaesthesia, cEEG is essential to detect ongoing non-convulsive status and titrate to seizure suppression (or burst-suppression).</div></div></div><div class="score"><label><input type="radio" name="s4i8" value="2"><span>2</span></label><label><input type="radio" name="s4i8" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i8" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="domain">
+          <div class="domain-head"><span>Professional Attitude</span><span class="dsub" data-dsub>0 / 2</span></div>
+          <div class="item"><div class="item-main"><span class="qn">9</span><div><div class="q">Team leadership &amp; communication.</div><div class="model"><b>Model:</b> clear team roles, closed-loop instructions, early ICU/anaesthesia call, and family update once stable.</div></div></div><div class="score"><label><input type="radio" name="s4i9" value="2"><span>2</span></label><label><input type="radio" name="s4i9" value="1"><span>1</span></label><label class="s0"><input type="radio" name="s4i9" value="0"><span>0</span></label></div></div>
+        </div>
+
+        <div class="sheet-foot">
+          <div class="total"><span data-total>0</span> / <span data-max>18</span> &nbsp;(<span data-pct>0</span>%)</div>
+          <div class="bar"><div class="fill" data-fill></div></div>
+          <div class="bandnote" data-bandnote>Clear Fail</div>
+        </div>
+      </div>
+
+      <div class="global"><div class="lab">Global rating (independent holistic judgement)</div>
+        <div class="grating">
+          <input type="radio" name="g-s4" id="g-s4-1"><label for="g-s4-1">Clear Fail</label>
+          <input type="radio" name="g-s4" id="g-s4-2"><label for="g-s4-2">Borderline Fail</label>
+          <input type="radio" name="g-s4" id="g-s4-3"><label for="g-s4-3">Borderline Pass</label>
+          <input type="radio" name="g-s4" id="g-s4-4"><label for="g-s4-4">Clear Pass</label>
+        </div>
+      </div>
+      <div class="std-note"><b>Standard setting:</b> bands — Clear Fail &lt;50% · Borderline Fail 50–59% · Borderline Pass 60–69% · Clear Pass ≥70%. Borderline regression is the usual OSCE method for setting the cohort pass mark (shown here illustratively); the fixed bands are a teaching convention (this tool does not compute regression).</div>
+      <div class="notes"><textarea placeholder="Examiner notes / feedback…"></textarea></div>
+    </div>
+
+    <div class="stationnav"><button data-target="s3">← Station 3</button><button data-target="overview">Finish → Overview</button></div>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <div class="disc">
+    <b>Teaching material — not for clinical use.</b> A practice circuit modelled on the Saudi Board Final Clinical Examination; station cards, item wording and the 2/1/0 scale are teaching conventions in the SCFHS register, not leaked exam papers. The four assessment domains and the Clear Fail→Clear Pass bands follow SCFHS practice (framework: CanMEDS); borderline regression is included as an illustrative OSCE standard-setting method, not a documented feature of the neurology exam. Drug doses and thresholds are for discussion — always follow current local protocols for real patients.
+    <span class="examiner-only"><br><br><b>Image credits:</b> CT, ptosis, EEG and brain MRI — Wikimedia Commons (CC BY / CC BY-SA / CC BY 2.5), reproduced with attribution. Optic-nerve MRI finding described in text.</span>
+  </div>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var body=document.body;
+
+  var modeToggle=document.getElementById('modeToggle');
+  if(modeToggle) modeToggle.addEventListener('click',function(){
+    body.classList.toggle('examiner-mode'); body.classList.toggle('candidate-mode');
+  });
+
+  var currentView='overview';
+  function show(id){
+    currentView=id;
+    document.querySelectorAll('.view').forEach(function(v){v.classList.toggle('active',v.id===id);});
+    document.querySelectorAll('.pill').forEach(function(p){p.classList.toggle('active',p.dataset.target===id);});
+    window.scrollTo({top:0,behavior:'smooth'}); resetTimer();
+  }
+  document.addEventListener('click',function(e){var t=e.target.closest('[data-target]'); if(t) show(t.dataset.target);});
+
+  document.querySelectorAll('.reveal-btn').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      var p=document.getElementById(btn.dataset.panel); if(!p) return;
+      btn.classList.toggle('opened', p.classList.toggle('show'));
+    });
+  });
+
+  function bandOf(pct){
+    if(pct>=70) return ['Clear Pass','b-cp'];
+    if(pct>=60) return ['Borderline Pass','b-bp'];
+    if(pct>=50) return ['Borderline Fail','b-bf'];
+    return ['Clear Fail','b-cf'];
+  }
+  function updateSheet(st){
+    var sheet=document.querySelector('.sheet[data-station="'+st+'"]'); if(!sheet) return;
+    var total=0,max=0;
+    sheet.querySelectorAll('.domain').forEach(function(d){
+      var de=0,dm=0;
+      d.querySelectorAll('.item').forEach(function(it){
+        dm+=2;
+        var sel=it.querySelector('input[type=radio]:checked');
+        if(sel) de+=parseInt(sel.value,10);
+      });
+      total+=de; max+=dm;
+      var sub=d.querySelector('[data-dsub]'); if(sub) sub.textContent=de+' / '+dm;
+    });
+    var pct=max?Math.round(total/max*100):0;
+    sheet.querySelector('[data-total]').textContent=total;
+    sheet.querySelector('[data-max]').textContent=max;
+    sheet.querySelector('[data-pct]').textContent=pct;
+    sheet.querySelector('[data-fill]').style.width=pct+'%';
+    var b=bandOf(pct);
+    sheet.querySelector('[data-bandnote]').textContent=b[0]+' ('+pct+'%)';
+    var chip=document.querySelector('[data-score="'+st+'"]'); if(chip) chip.textContent=total+' / '+max;
+    var badge=document.querySelector('[data-band="'+st+'"]'); if(badge){badge.textContent=b[0]; badge.className='band '+b[1];}
+  }
+  document.querySelectorAll('.sheet input[type=radio]').forEach(function(r){
+    r.addEventListener('change',function(){updateSheet(r.closest('.sheet').dataset.station);});
+  });
+  ['s1','s2','s3','s4'].forEach(updateSheet);
+
+  document.getElementById('resetBtn').addEventListener('click',function(){
+    if(!confirm('Reset all scores, ratings and notes?')) return;
+    document.querySelectorAll('.sheet input[type=radio], .grating input[type=radio]').forEach(function(r){r.checked=false;});
+    document.querySelectorAll('.notes textarea').forEach(function(t){t.value='';});
+    ['s1','s2','s3','s4'].forEach(updateSheet);
+  });
+
+  document.getElementById('printBtn').addEventListener('click',function(){
+    if(!body.classList.contains('examiner-mode')){body.classList.remove('candidate-mode');body.classList.add('examiner-mode');}
+    window.print();
+  });
+
+  /* Timer — 10 min stations */
+  var total=600,remaining=600,tick=null;
+  var tEl=document.getElementById('timerT'),boxEl=document.getElementById('timerBox'),startBtn=document.getElementById('tStart');
+  function render(){var m=Math.floor(remaining/60),s=remaining%60;tEl.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;boxEl.classList.toggle('warn',remaining<=120);}
+  function stop(){clearInterval(tick);tick=null;startBtn.textContent='Start';}
+  function resetTimer(){stop();remaining=total;render();}
+  startBtn.addEventListener('click',function(){
+    if(tick){stop();return;}
+    if(remaining<=0) remaining=total;
+    startBtn.textContent='Pause';
+    tick=setInterval(function(){remaining--;render();if(remaining===120||remaining===0){try{beep(remaining===0?2:1);}catch(e){}}if(remaining<=0)stop();},1000);
+  });
+  document.getElementById('tReset').addEventListener('click',resetTimer);
+  document.getElementById('tMinus').addEventListener('click',function(){total=Math.max(60,total-60);if(!tick)remaining=total;render();});
+  document.getElementById('tPlus').addEventListener('click',function(){total=Math.min(1800,total+60);if(!tick)remaining=total;render();});
+  function beep(n){
+    var ctx=new (window.AudioContext||window.webkitAudioContext)();
+    for(var i=0;i<n;i++){(function(k){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=880;
+      var t0=ctx.currentTime+k*0.35;g.gain.setValueAtTime(.001,t0);g.gain.exponentialRampToValueAtTime(.3,t0+.02);g.gain.exponentialRampToValueAtTime(.001,t0+.3);o.start(t0);o.stop(t0+.32);})(i);}
+  }
+  render();
+
+  /* Present-to-candidate: open a locked window (osceCandidate) showing only the current station's card */
+  function enterPresent(id){ body.classList.remove('examiner-mode'); body.classList.add('candidate-mode'); body.classList.add('present-mode'); show(id); }
+  var pb=document.getElementById('presentBtn');
+  if(pb) pb.addEventListener('click',function(){
+    if(!/^s[1-4]$/.test(currentView)){ alert('Open a station first, then present it to the candidate.'); return; }
+    var w=window.open(location.href.split('#')[0]+'#present='+currentView,'osceCandidate'); if(w) w.focus();
+  });
+  function applyPresentHash(){ var m=(location.hash||'').match(/present=(s[1-4])/); if(m) enterPresent(m[1]); }
+  window.addEventListener('hashchange',applyPresentHash);
+  applyPresentHash();
+})();
+</script>
+</body>
+</html>

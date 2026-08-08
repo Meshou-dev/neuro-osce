@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>OSCE — Candidate Station Card</title>
+<style>
+  :root{
+    --surface:#ffffff; --surface-2:#f5f6f8; --surface-3:#eceef2;
+    --ink:#1c2530; --ink-soft:#48505c; --ink-faint:#89909c;
+    --line:#e2e5ea; --line-strong:#d0d5dd; --accent:#2a4a6b; --accent-bg:#eaeef3;
+    --danger:#9d3b33; --danger-bg:#f4e7e5;
+    --radius:12px; --radius-sm:8px;
+  }
+  *{box-sizing:border-box} html,body{margin:0;padding:0}
+  body{font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:var(--ink);background:var(--surface-2);line-height:1.5;-webkit-font-smoothing:antialiased}
+  h1,.serif,.presenting-title{font-family:Georgia,"Iowan Old Style","Times New Roman",serif;font-weight:600}
+
+  header.topbar{position:sticky;top:0;z-index:20;background:var(--surface);border-bottom:1px solid var(--line)}
+  .topbar-inner{max-width:900px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+  .crest{width:40px;height:40px;border-radius:8px;flex:none;background:var(--accent-bg);border:1px solid var(--line);display:grid;place-items:center}
+  .crest svg{width:23px;height:23px;stroke:var(--accent)}
+  .titlewrap h1{margin:0;font-size:16px;color:var(--ink)}
+  .titlewrap p{margin:2px 0 0;font-size:11.5px;color:var(--ink-faint);letter-spacing:.3px;text-transform:uppercase}
+  .spacer{flex:1}
+  .nav{display:flex;gap:7px}
+  .pill{appearance:none;width:34px;height:34px;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-faint);border-radius:8px;font-size:14px;font-weight:800;cursor:pointer;font-family:inherit}
+  .pill:hover{border-color:var(--accent);color:var(--accent)}
+  .pill.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+  .timerbox{display:flex;align-items:center;gap:6px;background:var(--surface);border:1px solid var(--line-strong);border-radius:8px;padding:4px 6px 4px 12px}
+  .timerbox .t{font-variant-numeric:tabular-nums;font-weight:800;font-size:19px;letter-spacing:1px;min-width:66px;text-align:center}
+  .timerbox.warn{background:var(--danger-bg);border-color:#d8b0ab} .timerbox.warn .t{color:var(--danger)}
+  .tbtn{appearance:none;border:1px solid var(--line-strong);background:var(--surface);color:var(--ink-soft);padding:6px 11px;border-radius:6px;font-size:12.5px;font-weight:700;cursor:pointer;font-family:inherit}
+  .tbtn:hover{background:var(--surface-3)}
+
+  main{max-width:900px;margin:0 auto;padding:34px 20px 70px}
+  .view{display:none;animation:fade .2s ease} .view.active{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+  .doorcard{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:0 4px 26px rgba(28,37,48,.08);overflow:hidden}
+  .dc-head{background:var(--accent);color:#fff;padding:13px 24px;display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px}
+  .dc-head .l{font-size:12px;letter-spacing:.7px;text-transform:uppercase;opacity:.92}
+  .dc-head .r{font-size:13px;font-weight:700}
+  .dc-body{padding:26px 28px}
+  .presenting-title{font-size:23px;line-height:1.25;margin:0 0 16px}
+  .dc-vignette{font-size:17px;line-height:1.75;margin:0;color:var(--ink)}
+  .dc-task{margin-top:20px;padding:15px 18px;background:var(--surface-2);border:1px dashed var(--line-strong);border-radius:var(--radius-sm);font-size:15px;color:var(--ink-soft);line-height:1.65}
+  .dc-task b{color:var(--ink)}
+
+  footer{max-width:900px;margin:0 auto;padding:0 20px 50px;color:var(--ink-faint);font-size:12px;text-align:center}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="crest" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3c-2 0-3 1.4-3 3 0 .5 0 .9-.4 1.2C7 8 6 9.3 6 11c0 1 .3 1.7.8 2.3-.3.5-.5 1.1-.5 1.7 0 1.9 1.6 3 3.2 3 .3 1.2 1.3 2 2.5 2s2.2-.8 2.5-2c1.6 0 3.2-1.1 3.2-3 0-.6-.2-1.2-.5-1.7.5-.6.8-1.3.8-2.3 0-1.7-1-3-2.6-3.8C15 6.9 15 6.5 15 6c0-1.6-1-3-3-3Z"/><path d="M12 3v16"/>
+      </svg>
+    </div>
+    <div class="titlewrap">
+      <h1>Saudi Board of Neurology — Final Clinical Examination</h1>
+      <p>Part II · Candidate station card</p>
+    </div>
+    <div class="spacer"></div>
+    <nav class="nav" id="nav">
+      <button class="pill active" data-target="s1">1</button>
+      <button class="pill" data-target="s2">2</button>
+      <button class="pill" data-target="s3">3</button>
+      <button class="pill" data-target="s4">4</button>
+    </nav>
+    <div class="timerbox" id="timerBox">
+      <span class="t" id="timerT">10:00</span>
+      <button class="tbtn" id="tStart">Start</button>
+      <button class="tbtn" id="tReset">Reset</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="view active" id="s1">
+    <div class="doorcard">
+      <div class="dc-head"><span class="l">Candidate instructions</span><span class="r">Station 1 · 10 minutes</span></div>
+      <div class="dc-body">
+        <h2 class="presenting-title">Sudden right-sided weakness &amp; slurred speech</h2>
+        <p class="dc-vignette">You are the on-call neurology registrar in the Emergency Department at 03:10. A 68-year-old man is brought in by his family with sudden right-sided weakness and slurred speech that began about 90 minutes ago.</p>
+        <div class="dc-task"><b>Task.</b> Assess and manage this patient. You have 10 minutes. The examiner will guide the station and provide information only when you request it.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="s2">
+    <div class="doorcard">
+      <div class="dc-head"><span class="l">Candidate instructions</span><span class="r">Station 2 · 10 minutes</span></div>
+      <div class="dc-body">
+        <h2 class="presenting-title">Progressive breathlessness &amp; difficulty swallowing</h2>
+        <p class="dc-vignette">You are the medical registrar in the Emergency Department resuscitation area. A 34-year-old woman presents with three days of worsening breathlessness, nasal-sounding speech and difficulty swallowing. She can no longer lie flat.</p>
+        <div class="dc-task"><b>Task.</b> Assess and manage this patient. You have 10 minutes. The examiner will guide the station and provide information only when you request it.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="s3">
+    <div class="doorcard">
+      <div class="dc-head"><span class="l">Candidate instructions</span><span class="r">Station 3 · 10 minutes</span></div>
+      <div class="dc-body">
+        <h2 class="presenting-title">Painful loss of vision in one eye</h2>
+        <p class="dc-vignette">You are the on-call neurology registrar in the Emergency Department. A 27-year-old woman presents with four days of progressive blurring and dimming of vision in her left eye, with pain that is worse on eye movement and colours that look “washed out”.</p>
+        <div class="dc-task"><b>Task.</b> Assess and manage this patient. You have 10 minutes. The examiner will guide the station and provide information only when you request it.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="s4">
+    <div class="doorcard">
+      <div class="dc-head"><span class="l">Candidate instructions</span><span class="r">Station 4 · 10 minutes</span></div>
+      <div class="dc-body">
+        <h2 class="presenting-title">Prolonged, ongoing convulsion</h2>
+        <p class="dc-vignette">You are the medical registrar leading the resuscitation. A 24-year-old man has just arrived by ambulance and is convulsing — generalised tonic–clonic activity that, according to the paramedics, has been continuous for at least 8 minutes.</p>
+        <div class="dc-task"><b>Task.</b> Manage this patient. You have 10 minutes. The examiner will guide the station and provide information only when you request it.</div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>Read your card. The examiner will guide the station and answer your requests.</footer>
+
+<script>
+(function(){
+  "use strict";
+  function show(id){
+    document.querySelectorAll('.view').forEach(function(v){v.classList.toggle('active',v.id===id);});
+    document.querySelectorAll('.pill').forEach(function(p){p.classList.toggle('active',p.dataset.target===id);});
+    window.scrollTo({top:0,behavior:'smooth'}); resetTimer();
+  }
+  document.getElementById('nav').addEventListener('click',function(e){var t=e.target.closest('[data-target]');if(t)show(t.dataset.target);});
+
+  var total=600,remaining=600,tick=null;
+  var tEl=document.getElementById('timerT'),box=document.getElementById('timerBox'),startBtn=document.getElementById('tStart');
+  function render(){var m=Math.floor(remaining/60),s=remaining%60;tEl.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;box.classList.toggle('warn',remaining<=120);}
+  function stop(){clearInterval(tick);tick=null;startBtn.textContent='Start';}
+  function resetTimer(){stop();remaining=total;render();}
+  startBtn.addEventListener('click',function(){
+    if(tick){stop();return;}
+    if(remaining<=0)remaining=total;
+    startBtn.textContent='Pause';
+    tick=setInterval(function(){remaining--;render();if(remaining===120||remaining===0){try{beep(remaining===0?2:1);}catch(e){}}if(remaining<=0)stop();},1000);
+  });
+  document.getElementById('tReset').addEventListener('click',resetTimer);
+  function beep(n){var ctx=new (window.AudioContext||window.webkitAudioContext)();for(var i=0;i<n;i++){(function(k){var o=ctx.createOscillator(),g=ctx.createGain();o.connect(g);g.connect(ctx.destination);o.type='sine';o.frequency.value=880;var t0=ctx.currentTime+k*0.35;g.gain.setValueAtTime(.001,t0);g.gain.exponentialRampToValueAtTime(.3,t0+.02);g.gain.exponentialRampToValueAtTime(.001,t0+.3);o.start(t0);o.stop(t0+.32);})(i);}}
+  render();
+})();
+</script>
+</body>
+</html>
