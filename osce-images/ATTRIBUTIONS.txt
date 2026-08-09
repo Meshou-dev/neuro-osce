@@ -92,3 +92,86 @@ REJECTED CANDIDATES (looked at each, all failed "clean") — do not use:
 - Wikimedia "Diseminacion en espacio.jpg" — 4-panel montage + yellow arrows + labels.
 - Open-i PMC3934317 figs 2/3 — multi-panel NMO-vs-MS comparison montages.
 ================================================================
+
+
+================================================================
+ORBIT MRI — ACUTE OPTIC NEURITIS (OSCE teaching, added 2026-08-09)
+----------------------------------------------------------------
+Purpose: candidate-interpreted teaching image for a LEFT optic neuritis
+station. All three files below were DOWNLOADED, opened, and visually
+verified at full 1024px resolution AND re-checked under 3.2x brightness +
+autocontrast (corner/edge watermark scan). "Clean" = single panel, NO
+burned-in text, NO L/R or scanner (TR/TE) overlay, NO arrows, NO ROI
+boxes/circles, NO ruler, NO comparison montage, NO watermark.
+
+Licence note: Radiopaedia case images are CC BY-NC-SA 3.0. Radiopaedia's
+licence page lists "giving a lecture or tutorial in your department" as a
+DEFINITELY-PERMITTED use, so an internal/departmental OSCE teaching station
+is fine WITH the attribution string. Do NOT place these into any paywalled
+product (e.g. the paid Hakim Platform) — that is NOT permitted under the
+NC clause. (User confirmed licence is not a constraint for this private,
+internal teaching use; recorded here as good practice.)
+
+Radiological convention applies (no burned-in L/R marker on any file):
+image-LEFT = patient's RIGHT, image-RIGHT = patient's LEFT.
+
+----------------------------------------------------------------
+[A] orbit-optic-neuritis-coronal-t2fs-left.jpg   ***PRIMARY (non-contrast interpretation)***
+    Plane/seq : Coronal T2-weighted, FAT-SATURATED (orbits)
+    Side      : LEFT optic nerve affected
+    Shows     : Swollen, T2-hyperintense LEFT optic nerve with effacement
+                of the bright CSF within the optic-nerve sheath. The normal
+                RIGHT optic nerve retains the intact "donut" (thin bright
+                CSF ring around a dark nerve) — the two-nerve asymmetry is
+                the teaching point.
+    Pixels    : 1024 x 1024 (JPEG, grayscale)
+    Source URL: https://radiopaedia.org/cases/optic-neuritis-16   (rID 160621)
+                Case: 40M, 3 days of painful left eye vision loss; Radiopaedia
+                calls it "the classic appearance of optic neuritis."
+    Image file: https://prod-images-static.radiopaedia.org/images/61111487/9e107bd5523b02029bbb6eb4fdd5f388e64e33bd38d4abbd98652b7e4bccc1a6_jumbo.jpeg
+    License   : CC BY-NC-SA 3.0 (Radiopaedia)
+    ATTRIBUTION: Case courtesy of Nicole Tamara Nudelman, Radiopaedia.org, rID: 160621
+      Clickable: Case courtesy of Nicole Tamara Nudelman, <a href="https://radiopaedia.org">Radiopaedia.org</a>, rID: <a href="https://radiopaedia.org/cases/160621">160621</a>
+    Clean?    : YES — verified full-res + brightness/corner scan. No text/arrows/ROI/ruler/overlay/watermark.
+
+[B] orbit-optic-neuritis-coronal-t1post-left.jpg   ***SUPPORTING (post-contrast / enhancement)***
+    Plane/seq : Coronal T1-weighted, POST-GADOLINIUM, FAT-SATURATED (T1 C+ FS)
+    Side      : LEFT optic nerve affected
+    Shows     : Post-contrast enhancement of the LEFT optic nerve/perineural
+                soft tissue. Enhancement is present but this served slice is
+                relatively anterior (globes in view), so it is subtler than
+                [A]/[C]; best used as the "add contrast" companion, not the
+                sole interpretation image.
+    Pixels    : 1024 x 1024 (JPEG, grayscale)
+    Source URL: https://radiopaedia.org/cases/optic-neuritis-16   (rID 160621)  [same case as A]
+    Image file: https://prod-images-static.radiopaedia.org/images/61111611/b93dc88b32d81fd7a61ad77398115d76c5fd22b48256e00229d4fbfeca99bff6_jumbo.jpeg
+    License   : CC BY-NC-SA 3.0 (Radiopaedia)
+    ATTRIBUTION: Case courtesy of Nicole Tamara Nudelman, Radiopaedia.org, rID: 160621
+    Clean?    : YES — verified full-res + brightness/corner scan. No text/arrows/ROI/ruler/overlay/watermark.
+
+[C] orbit-optic-neuritis-coronal-stir-left-ALT.jpg   ***ALTERNATE PRIMARY (tightly framed STIR)***
+    Plane/seq : Coronal STIR (fat-suppressed short-tau inversion recovery)
+    Side      : LEFT optic nerve affected
+    Shows     : Swollen, hyperintense LEFT optic nerve vs a normal RIGHT
+                optic nerve. Tightly framed on the orbital apex — an
+                excellent standalone "which nerve is abnormal?" image.
+                Interchangeable with [A]; pick whichever you prefer.
+    Pixels    : 1024 x 1024 (JPEG, grayscale)
+    Source URL: https://radiopaedia.org/cases/optic-neuritis-19   (rID 173785)
+                Case: 35F, "acute left vision loss"; report: high T2/FLAIR
+                signal + enhancement of the LEFT optic nerve, normal right.
+    Image file: https://prod-images-static.radiopaedia.org/images/63177200/b1d5132e0e86d966e41fbc9fd0e82735a67d15569cc869f582b8190be58f601a_jumbo.jpeg  (also served as .png)
+    License   : CC BY-NC-SA 3.0 (Radiopaedia)
+    ATTRIBUTION: Case courtesy of Zentout Sofiane, Radiopaedia.org, rID: 173785
+      Clickable: Case courtesy of Zentout Sofiane, <a href="https://radiopaedia.org">Radiopaedia.org</a>, rID: <a href="https://radiopaedia.org/cases/173785">173785</a>
+    Clean?    : YES — verified full-res + brightness/corner scan. No text/arrows/ROI/ruler/overlay/watermark.
+
+REJECTED for this set (looked at the actual file, failed "clean"):
+- Wikimedia "Case-3-mri.png" (CC BY-SA 4.0, right optic neuritis): the file is
+  a 6-PANEL MONTAGE (3 axial DWI + 3 coronal T2FS) with burned-in text
+  "MEDCOM RESAMPLED, Resample Z(1.5..." and RED positioning/section lines
+  drawn across the axial panels. Despite its clean-sounding caption, NOT usable.
+  (https://commons.wikimedia.org/wiki/File:Case-3-mri.png)
+- Radiopaedia optic-neuritis-26 cover: full burned-in DICOM overlay
+  (TR/TE/FA, R/L/A/P markers, "AXIAL T1 FSE+CONTRAST", zoom, slice number).
+================================================================
