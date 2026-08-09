@@ -24,6 +24,7 @@
   .band{font-size:12px;font-weight:800;padding:3px 11px;border-radius:20px}
   .b-cf{background:var(--danger-bg);color:var(--danger)} .b-bf{background:#f6ede0;color:var(--warn)}
   .b-bp{background:#eef4ee;color:var(--ok)} .b-cp{background:var(--ok-bg);color:var(--ok)}
+  .b-none{background:var(--surface-2);color:var(--ink-faint)}
   .grating{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
   .grating label{border:1px solid var(--line-strong);border-radius:8px;padding:7px 12px;font-size:12.5px;font-weight:700;cursor:pointer;color:var(--ink-soft)}
   .grating input{display:none}.grating input:checked + span{}
@@ -37,6 +38,7 @@
   <nav class="nav" id="nav"></nav>
   <div class="spacer"></div>
   <div class="timerbox" id="tbox"><span class="t" id="tt">10:00</span><button class="btn" id="startbtn">Start</button><button class="btn" id="resetbtn">Reset</button></div>
+  <button class="btn" id="newattempt" title="Clear reveals, scores and timer for a fresh candidate">New attempt</button>
   <button class="btn accent" id="opendisp">Open Display</button>
 </div></header>
 
@@ -81,6 +83,15 @@
     renderTimer();send();
   };
   document.getElementById('resetbtn').onclick=function(){if(tick){clearInterval(tick);tick=null;}S.timer.running=false;S.timer.remaining=600;renderTimer();send();};
+  var naTimer=null, naBtn=document.getElementById('newattempt');
+  function naArm(on){ naBtn.textContent=on?'Click again to confirm':'New attempt'; naBtn.classList.toggle('accent',on); }
+  naBtn.onclick=function(){
+    if(!naBtn.classList.contains('accent')){ naArm(true); naTimer=setTimeout(function(){naArm(false);},4000); return; }
+    if(naTimer){clearTimeout(naTimer);naTimer=null;} naArm(false);
+    S.revealed[S.station]=[]; delete S.scores[S.station]; S.global[S.station]=undefined;
+    if(tick){clearInterval(tick);tick=null;} S.timer={remaining:600,running:false};
+    renderAll(); send();
+  };
   document.getElementById('clearbtn').onclick=function(){S.revealed[S.station]=[];renderShow();send();};
   document.getElementById('opendisp').onclick=function(){window.open('display.html','osceDisplay');setTimeout(send,800);};
 
@@ -102,13 +113,15 @@
   }
 
   function computeTotal(){
-    var s=cur(), arr=scoreArr(), earned=0, max=0;
-    s.items.forEach(function(it,idx){ max+=it.max; if(arr[idx]>=0)earned+=arr[idx]; });
+    var s=cur(), arr=scoreArr(), earned=0, max=0, unmarked=0;
+    s.items.forEach(function(it,idx){ max+=it.max; if(arr[idx]>=0)earned+=arr[idx]; else unmarked++; });
     var pct=max?Math.round(earned/max*100):0;
     document.getElementById('total').textContent=earned;
     document.getElementById('max').textContent=max;
     document.getElementById('pct').textContent=pct;
-    var band=document.getElementById('band'), lab, cls;
+    var band=document.getElementById('band');
+    if(unmarked>0){ band.textContent=unmarked+' item'+(unmarked>1?'s':'')+' unmarked'; band.className='band b-none'; return; }
+    var lab, cls;
     if(pct>=70){lab='Clear Pass';cls='b-cp';} else if(pct>=60){lab='Borderline Pass';cls='b-bp';} else if(pct>=50){lab='Borderline Fail';cls='b-bf';} else {lab='Clear Fail';cls='b-cf';}
     band.textContent=lab; band.className='band '+cls;
   }
