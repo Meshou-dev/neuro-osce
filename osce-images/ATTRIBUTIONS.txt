@@ -1,0 +1,94 @@
+MS BRAIN MRI — OSCE TEACHING IMAGE CANDIDATES
+Sourced 2026-08-09. Every file below was opened and visually verified (not trusted by filename/alt-text).
+"Clean" = single panel, NO burned-in text, NO arrows, NO ROI boxes, NO rulers, NO watermark, NO side-by-side panels.
+
+================================================================
+CRITICAL LICENSING NOTE — READ BEFORE USE
+----------------------------------------------------------------
+The 3 Radiopaedia images (ms-sagittal-dawson.jpg, ms-axial-flair-clean.jpg,
+ms-sagittal-dawson-alt.jpg) are CC BY-NC-SA 3.0.
+Radiopaedia's own licence page states:
+  - DEFINITELY PERMITTED: "Giving a lecture or tutorial in your department."
+    => An internal residency / departmental OSCE teaching station is fine
+       (with the attribution string included).
+  - DEFINITELY NOT PERMITTED: "Creating a website or app with educational
+    material that is behind a paywall (incl. MCQs)" or "a course/workshop
+    registrants pay to attend."
+    => If any of these images are put into the PAID Hakim Platform (paywalled
+       MCQ/OSCE content), that VIOLATES the licence. For Hakim use, either get a
+       Radiopaedia licence (license@radiopaedia.org) OR use the Wikimedia
+       image below (ms-axial-t2-commons.png), which has NO non-commercial clause.
+Source: https://radiopaedia.org/licence  (verified 2026-08-09)
+
+ms-axial-t2-commons.png is CC BY-SA 4.0 (Wikimedia) — NO non-commercial
+restriction, so it is the only one of the four safe for paywalled/commercial use
+(attribution + ShareAlike still required).
+================================================================
+
+
+[1] ms-sagittal-dawson.jpg   ***PRIMARY — the iconic image***
+    Plane/seq : Sagittal (parasagittal) FLAIR
+    Shows     : Textbook Dawson's fingers — flame/ovoid periventricular
+                demyelinating plaques radiating perpendicular off the body of
+                the lateral ventricle / callososeptal interface.
+    Pixels    : 1024 x 903  (JPEG)
+    Source URL: https://radiopaedia.org/cases/35916  (case: "Multiple sclerosis - Dawson's fingers")
+    Image file: https://prod-images-static.radiopaedia.org/images/562/014cd18453a1b963e17e97cf4ec5c3_jumbo.jpeg
+    License   : CC BY-NC-SA 3.0
+    ATTRIBUTION: Case courtesy of Frank Gaillard, Radiopaedia.org, rID: 35916
+      Online (clickable) form:
+      Case courtesy of Frank Gaillard, <a href="https://radiopaedia.org">Radiopaedia.org</a>, rID: <a href="https://radiopaedia.org/cases/35916">35916</a>
+    Clean?    : YES — verified clean (checked full-res + enlarged corners; no watermark/text/arrows).
+
+[2] ms-axial-flair-clean.jpg   ***PRIMARY — clean axial FLAIR***
+    Plane/seq : Axial FLAIR
+    Shows     : Periventricular ovoid white-matter hyperintensities adjacent to
+                the lateral ventricle bodies (right > left), popping against
+                suppressed CSF. Classic MS axial teaching appearance.
+    Pixels    : 819 x 1024  (JPEG)
+    Source URL: https://radiopaedia.org/cases/2634  (case: "Multiple sclerosis" / slug ms02; this is the "Axial FLAIR" image of the series, imageId 798)
+    Image file: https://prod-images-static.radiopaedia.org/images/798/7a111ecd3bebcb930ce9f60ed18840_jumbo.jpeg
+    License   : CC BY-NC-SA 3.0
+    ATTRIBUTION: Case courtesy of Frank Gaillard, Radiopaedia.org, rID: 2634
+      Online (clickable) form:
+      Case courtesy of Frank Gaillard, <a href="https://radiopaedia.org">Radiopaedia.org</a>, rID: <a href="https://radiopaedia.org/cases/2634">2634</a>
+    Clean?    : YES — verified clean (full-res + corner check; no watermark/text/arrows).
+
+[3] ms-axial-t2-commons.png   ***LICENCE-SAFE axial (use this one for Hakim/paywalled)***
+    Plane/seq : Axial T2-weighted (note: T2, not FLAIR — CSF is bright)
+    Shows     : Periventricular T2 white-matter hyperintensities of MS
+                (a right frontal periventricular focus is the most conspicuous).
+    Pixels    : 756 x 942  (PNG)
+    Source URL: https://commons.wikimedia.org/wiki/File:MSMRI.png
+    Image file: https://upload.wikimedia.org/wikipedia/commons/5/5d/MSMRI.png
+    License   : CC BY-SA 4.0  (NO non-commercial clause)
+    ATTRIBUTION: James Heilman, MD, via Wikimedia Commons, "MSMRI.png", licensed CC BY-SA 4.0
+      (https://creativecommons.org/licenses/by-sa/4.0/). ShareAlike applies.
+    Clean?    : YES — verified clean. (Its twin "MSMRIMark.png" has a red arrow — that is a DIFFERENT file and was rejected.)
+
+[4] ms-sagittal-dawson-alt.jpg   ***ALTERNATE sagittal Dawson's (backup)***
+    Plane/seq : Sagittal FLAIR
+    Shows     : Dawson's fingers (periventricular plaques perpendicular to the
+                corpus callosum) + subcallosal ependymal dot-dash sign.
+    Pixels    : 1024 x 1024  (JPEG)
+    Source URL: https://radiopaedia.org/cases/9941  (case: "Multiple sclerosis" / slug multiple-sclerosis-4, imageId 482357)
+    Image file: https://prod-images-static.radiopaedia.org/images/482357/ca620d98e54520aa46114d47909bcd_jumbo.jpg
+    License   : CC BY-NC-SA 3.0
+    ATTRIBUTION: Case courtesy of Frank Gaillard, Radiopaedia.org, rID: 9941
+      Online (clickable) form:
+      Case courtesy of Frank Gaillard, <a href="https://radiopaedia.org">Radiopaedia.org</a>, rID: <a href="https://radiopaedia.org/cases/9941">9941</a>
+    Clean?    : YES — verified clean at full 1024px (no watermark/text/arrows).
+
+
+================================================================
+REJECTED CANDIDATES (looked at each, all failed "clean") — do not use:
+- Wikimedia "Axial DIR MRI of a brain with MS lesions" — has white circles round lesions.
+- Wikimedia "Axial PSIR MRI of a brain with MS lesions" — has white/black arrows.
+- Wikimedia "Dawsonsfingers.JPG" — has a RED ROI box + ruler ticks; also only 447px.
+- Wikimedia "MS, lesion adjacent lateral ventricle.jpg" — NOT an MRI; gross pathology photo + ruler.
+- Wikimedia "MULTIPLE SCLEROSIS.JPG" — cervical SPINE, not brain; 465px.
+- Wikimedia "MSMRIMark.png" — red arrow (annotated twin of #3 above).
+- Wikimedia Russian "Демиелинизирующее заболевание..." — full DICOM burned-in overlay (patient ID, TR/TE, scale bar).
+- Wikimedia "Diseminacion en espacio.jpg" — 4-panel montage + yellow arrows + labels.
+- Open-i PMC3934317 figs 2/3 — multi-panel NMO-vs-MS comparison montages.
+================================================================

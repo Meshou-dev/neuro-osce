@@ -66,7 +66,7 @@ window.OSCE = {
       task:"Assess and manage this patient. You have 10 minutes; ask the examiner for any investigations you would like.",
       show:[
         {id:"orbit", label:"MRI orbits", html:'<ul class="findlist"><li>MRI orbits (fat-saturated): the left optic nerve is mildly swollen, shows high T2 signal and enhances after contrast.</li></ul>'},
-        {id:"mri", label:"MRI brain", img:"osce-images/ms-brain-mri-axial-flair.png", cap:"MRI brain: axial FLAIR"}
+        {id:"mri", label:"MRI brain", img:"osce-images/ms-axial-t2-commons.png", cap:"MRI brain: axial T2"}
       ],
       items:[
         {domain:"Data-Gathering", q:"Key confirmatory signs and the diagnosis?", model:"Left optic neuritis: subacute painful monocular loss (worse on eye movement), RAPD, red/colour desaturation and central scotoma. A normal fundus is common.", max:2},
