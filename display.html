@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OSCE — Candidate Display</title>
+<link rel="stylesheet" href="osce.css">
+<style>
+  .pres{font-size:22px;line-height:1.25}
+  #tt{font-size:30px;min-width:100px}
+  .waiting{color:var(--ink-faint);text-align:center;padding:30px 0;font-size:14px}
+</style>
+</head>
+<body>
+<header class="topbar"><div class="topbar-inner">
+  <div class="brand"><h1 class="pres" id="pres">—</h1><p id="bp">Saudi Board of Neurology · Final Clinical Examination · Part II</p></div>
+  <div class="spacer"></div>
+  <div class="timerbox" id="tbox"><span class="t" id="tt">10:00</span></div>
+</div></header>
+
+<main style="max-width:1000px;margin:0 auto;padding:26px 20px 70px">
+  <div class="card">
+    <div class="kicker">Candidate instructions</div>
+    <p id="card" style="font-size:17px;line-height:1.75;margin:0"></p>
+    <div id="task" style="margin-top:16px;padding:14px 17px;background:var(--surface-2);border:1px dashed var(--line-strong);border-radius:9px;font-size:15px;color:var(--ink-soft);line-height:1.65"></div>
+  </div>
+  <div id="reveals"></div>
+</main>
+
+<script src="osce-data.js"></script>
+<script>
+(function(){
+  var byId={}; (window.OSCE.stations||[]).forEach(function(s){byId[s.id]=s;});
+  var tt=document.getElementById('tt'), tbox=document.getElementById('tbox'), reveals=document.getElementById('reveals');
+  function render(st){
+    var s=byId[st.station]; if(!s) return;
+    document.getElementById('pres').textContent=s.present;
+    document.getElementById('card').textContent=s.card;
+    document.getElementById('task').innerHTML='<b>Task.</b> '+s.task;
+    var r=(st.timer&&typeof st.timer.remaining==='number')?st.timer.remaining:600;
+    var m=Math.floor(r/60), sec=r%60;
+    tt.textContent=(m<10?'0':'')+m+':'+(sec<10?'0':'')+sec;
+    tbox.classList.toggle('warn', r<=120);
+    var html='';
+    (st.revealed||[]).forEach(function(id){
+      var it=(s.show||[]).filter(function(x){return x.id===id;})[0];
+      if(!it) return;
+      html+='<div class="card">';
+      if(it.img){ html+='<figure class="fig"><img src="'+it.img+'" alt=""><figcaption>'+(it.cap||'')+'</figcaption></figure>'; }
+      else { html+=(it.html||''); }
+      html+='</div>';
+    });
+    if(!html) html='<div class="waiting">Awaiting the examiner…</div>';
+    reveals.innerHTML=html;
+  }
+  function onMsg(d){ if(d&&d.t==='state') render(d); }
+  var bc=('BroadcastChannel' in window)? new BroadcastChannel('osce') : null;
+  if(bc) bc.onmessage=function(e){ onMsg(e.data); };
+  window.addEventListener('storage',function(e){ if(e.key==='osce-msg'&&e.newValue){ try{onMsg(JSON.parse(e.newValue));}catch(x){} } });
+  function hello(){ var m={t:'hello'}; if(bc) bc.postMessage(m); try{localStorage.setItem('osce-msg',JSON.stringify({t:'hello',_:(+new Date())}));}catch(x){} }
+  render({station:'s1',timer:{remaining:600,running:false},revealed:[]});
+  hello();
+  setTimeout(hello,600);
+})();
+</script>
+</body>
+</html>
