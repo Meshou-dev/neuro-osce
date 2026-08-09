@@ -13,6 +13,8 @@
   .item{border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
   .item .q{font-size:14.5px;font-weight:700}
   .item .model{font-size:13px;color:var(--ink-soft);margin-top:5px;line-height:1.55}
+  .item .q .num{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:6px;background:var(--accent);color:#fff;font-size:11px;margin-right:8px;vertical-align:1px}
+  .item .q .tag{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.4px;text-transform:uppercase;color:var(--ink-faint);background:var(--surface-2);border:1px solid var(--line);border-radius:20px;padding:1px 8px;margin-right:8px;vertical-align:1px}
   .sc{display:flex;gap:6px;margin-top:9px}
   .sc button{width:38px;height:34px;border:1px solid var(--line-strong);background:var(--surface);border-radius:8px;font-weight:800;font-size:14px;cursor:pointer;color:var(--ink-faint);font-family:inherit}
   .sc button.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -49,7 +51,7 @@
   <div class="card">
     <div class="kicker">Examinee assessment · 2 = done · 1 = partial · 0 = not done</div>
     <div id="rubricbox"></div>
-    <div class="totalbar"><span class="v"><span id="total">0</span> / <span id="max">0</span> (<span id="pct">0</span>%)</span><span class="band b-cf" id="band">Clear Fail</span></div>
+    <div class="totalbar"><span class="v"><span id="total">0</span> / <span id="max">0</span> (<span id="pct">0</span>%)</span><span class="band b-cf" id="band">Clear Fail</span><span class="hint">practice feedback only — not official standard-setting</span></div>
     <div style="margin-top:14px"><div class="hint" style="font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px">Global rating</div>
       <div class="grating" id="global"></div></div>
   </div>
@@ -62,7 +64,7 @@
   var S={station:stations[0].id, timer:{remaining:600,running:false}, revealed:{}, scores:{}, global:{}};
   function cur(){return byId[S.station];}
   function revArr(){return S.revealed[S.station]||(S.revealed[S.station]=[]);}
-  function itemCount(s){var n=0;s.domains.forEach(function(d){n+=d.items.length;});return n;}
+  function itemCount(s){return (s.items||[]).length;}
   function scoreArr(){var s=cur();if(!S.scores[S.station])S.scores[S.station]=new Array(itemCount(s)).fill(-1);return S.scores[S.station];}
 
   var bc=('BroadcastChannel' in window)? new BroadcastChannel('osce') : null;
@@ -100,8 +102,8 @@
   }
 
   function computeTotal(){
-    var s=cur(), arr=scoreArr(), earned=0, max=0, idx=0;
-    s.domains.forEach(function(d){ d.items.forEach(function(it){ max+=it.max; if(arr[idx]>=0)earned+=arr[idx]; idx++; }); });
+    var s=cur(), arr=scoreArr(), earned=0, max=0;
+    s.items.forEach(function(it,idx){ max+=it.max; if(arr[idx]>=0)earned+=arr[idx]; });
     var pct=max?Math.round(earned/max*100):0;
     document.getElementById('total').textContent=earned;
     document.getElementById('max').textContent=max;
@@ -111,22 +113,18 @@
     band.textContent=lab; band.className='band '+cls;
   }
   function renderRubric(){
-    var s=cur(), arr=scoreArr(), box=document.getElementById('rubricbox'); box.innerHTML=''; var idx=0;
-    s.domains.forEach(function(d){
-      var h=document.createElement('div'); h.className='domain-h'; h.textContent=d.name; box.appendChild(h);
-      d.items.forEach(function(it){
-        var myIdx=idx;
-        var wrap=document.createElement('div'); wrap.className='item';
-        wrap.innerHTML='<div class="q">'+it.q+'</div><div class="model"><b>Model:</b> '+it.model+'</div>';
-        var sc=document.createElement('div'); sc.className='sc';
-        [2,1,0].forEach(function(v){
-          var b=document.createElement('button'); b.textContent=v;
-          if(arr[myIdx]===v) b.className=(v===0?'on0':'on');
-          b.onclick=function(){arr[myIdx]=v;renderRubric();computeTotal();};
-          sc.appendChild(b);
-        });
-        wrap.appendChild(sc); box.appendChild(wrap); idx++;
+    var s=cur(), arr=scoreArr(), box=document.getElementById('rubricbox'); box.innerHTML='';
+    s.items.forEach(function(it,idx){
+      var wrap=document.createElement('div'); wrap.className='item';
+      wrap.innerHTML='<div class="q"><span class="num">'+(idx+1)+'</span><span class="tag">'+it.domain+'</span>'+it.q+'</div><div class="model"><b>Model:</b> '+it.model+'</div>';
+      var sc=document.createElement('div'); sc.className='sc';
+      [2,1,0].forEach(function(v){
+        var b=document.createElement('button'); b.textContent=v;
+        if(arr[idx]===v) b.className=(v===0?'on0':'on');
+        b.onclick=function(){arr[idx]=v;renderRubric();computeTotal();};
+        sc.appendChild(b);
       });
+      wrap.appendChild(sc); box.appendChild(wrap);
     });
     computeTotal();
   }
