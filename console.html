@@ -43,6 +43,13 @@
 </div></header>
 
 <main style="max-width:1000px;margin:0 auto;padding:20px 20px 70px">
+  <div class="card" id="sharebar" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <span class="hint" style="font-weight:800">Candidate link</span>
+    <input id="clink" readonly style="flex:1;min-width:240px;font-size:12px;padding:8px 10px;border:1px solid var(--line-strong);border-radius:8px;background:var(--surface);color:var(--ink-soft);font-family:inherit">
+    <button class="btn" id="copylink">Copy</button>
+    <span class="hint">Room <b id="roomcode">—</b></span>
+    <span id="syncstat" class="band b-none" title="cross-device link status">● offline</span>
+  </div>
   <div class="card">
     <div class="kicker">Show to candidate <span class="hint" id="dxline"></span></div>
     <p class="hint" style="margin:0 0 10px">Click to push each item to the shared Display. Click again to hide it.</p>
@@ -59,6 +66,8 @@
   </div>
 </main>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.10.1/mqtt.min.js"></script>
+<script src="sync.js"></script>
 <script src="osce-data.js"></script>
 <script>
 (function(){
@@ -70,9 +79,21 @@
   function scoreArr(){var s=cur();if(!S.scores[S.station])S.scores[S.station]=new Array(itemCount(s)).fill(-1);return S.scores[S.station];}
 
   var bc=('BroadcastChannel' in window)? new BroadcastChannel('osce') : null;
-  function send(){var m={t:'state',station:S.station,timer:S.timer,revealed:revArr()}; if(bc)bc.postMessage(m); try{localStorage.setItem('osce-msg',JSON.stringify({t:'state',station:S.station,timer:S.timer,revealed:revArr(),_:(+new Date())}));}catch(x){}}
+  function send(){var m={t:'state',station:S.station,timer:S.timer,revealed:revArr()}; if(bc)bc.postMessage(m); try{localStorage.setItem('osce-msg',JSON.stringify({t:'state',station:S.station,timer:S.timer,revealed:revArr(),_:(+new Date())}));}catch(x){} if(window.__osceSync)window.__osceSync.publish(m);}
   if(bc) bc.onmessage=function(e){ if(e.data&&e.data.t==='hello') send(); };
   window.addEventListener('storage',function(e){ if(e.key==='osce-msg'&&e.newValue){ try{var d=JSON.parse(e.newValue); if(d.t==='hello') send();}catch(x){} } });
+  function onSyncStatus(st){
+    var el=document.getElementById('syncstat'); if(!el) return;
+    var map={connected:['● live','b-cp'], connecting:['● connecting…','b-none'], offline:['● offline','b-none'], error:['● offline','b-none'], nolib:['● offline','b-none'], noroom:['● local only','b-none']};
+    var v=map[st]||['● …','b-none']; el.textContent=v[0]; el.className='band '+v[1];
+  }
+  var sync=window.OSCESync({create:true, subscribe:false, onStatus:onSyncStatus}); window.__osceSync=sync;
+  (function(){
+    var ci=document.getElementById('clink'); if(ci) ci.value=new URL('display.html?room='+(sync.room||''), location.href).href;
+    var rc=document.getElementById('roomcode'); if(rc) rc.textContent=sync.room||'—';
+    var cb=document.getElementById('copylink');
+    if(cb) cb.onclick=function(){ var i=document.getElementById('clink'); i.focus(); i.select(); try{navigator.clipboard.writeText(i.value);}catch(e){} try{document.execCommand('copy');}catch(e){} cb.textContent='Copied'; setTimeout(function(){cb.textContent='Copy';},1500); };
+  })();
 
   var tick=null;
   function renderTimer(){var r=S.timer.remaining,m=Math.floor(r/60),s=r%60;document.getElementById('tt').textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;document.getElementById('tbox').classList.toggle('warn',r<=120);document.getElementById('startbtn').textContent=S.timer.running?'Pause':'Start';}
@@ -93,7 +114,7 @@
     renderAll(); send();
   };
   document.getElementById('clearbtn').onclick=function(){S.revealed[S.station]=[];renderShow();send();};
-  document.getElementById('opendisp').onclick=function(){window.open('display.html','osceDisplay');setTimeout(send,800);};
+  document.getElementById('opendisp').onclick=function(){window.open('display.html?room='+((window.__osceSync&&window.__osceSync.room)||''),'osceDisplay');setTimeout(send,800);};
 
   function renderNav(){
     var n=document.getElementById('nav'); n.innerHTML='';
